@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}Start a Campaign - CrowdFund Egypt{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-9 col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4 p-md-5">
+                    <h2 class="fw-bold text-dark mb-1"><i class="fa-solid fa-rocket text-primary me-2"></i>Launch a Campaign</h2>
+                    <p class="text-muted small mb-4">Fill out the details below to start raising funds for your project in Egypt.</p>
+
+                    <form method="POST" enctype="multipart/form-data" novalidate>
+                        {% csrf_token %}
+
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label fw-medium">Campaign Title <span class="text-danger">*</span></label>
+                                {{ form.title }}
+                                {% if form.title.errors %}
+                                    <div class="text-danger small mt-1">{{ form.title.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium">Category <span class="text-danger">*</span></label>
+                                {{ form.category }}
+                                {% if form.category.errors %}
+                                    <div class="text-danger small mt-1">{{ form.category.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium">Total Target Amount (EGP) <span class="text-danger">*</span></label>
+                                {{ form.target }}
+                                {% if form.target.errors %}
+                                    <div class="text-danger small mt-1">{{ form.target.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-medium">Campaign Details & Description <span class="text-danger">*</span></label>
+                                {{ form.details }}
+                                {% if form.details.errors %}
+                                    <div class="text-danger small mt-1">{{ form.details.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium">Start Date & Time <span class="text-danger">*</span></label>
+                                {{ form.start_time }}
+                                {% if form.start_time.errors %}
+                                    <div class="text-danger small mt-1">{{ form.start_time.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium">End Date & Time <span class="text-danger">*</span></label>
+                                {{ form.end_time }}
+                                {% if form.end_time.errors %}
+                                    <div class="text-danger small mt-1">{{ form.end_time.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-medium">Project Pictures <span class="text-danger">*</span></label>
+                                {{ form.images }}
+                                <div class="form-text">Select one or multiple high-quality images. The first image will be used as the cover photo.</div>
+                                {% if form.images.errors %}
+                                    <div class="text-danger small mt-1">{{ form.images.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-medium">Tags</label>
+                                {{ form.tags_input }}
+                                <div class="form-text">Enter relevant tags separated by commas to help users discover your campaign.</div>
+                                {% if form.tags_input.errors %}
+                                    <div class="text-danger small mt-1">{{ form.tags_input.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                            <a href="{% url 'projects:list' %}" class="btn btn-outline-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary px-4 fw-semibold">Submit & Publish Campaign</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
