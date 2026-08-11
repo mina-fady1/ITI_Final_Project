@@ -26,7 +26,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+
+    # Required by django-allauth
+    'django.contrib.sites',
+
+    # django-allauth (Facebook login)
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.facebook',
+
     # Project Apps
     'accounts',
     'projects',
@@ -37,14 +46,19 @@ INSTALLED_APPS = [
 
 AUTH_USER_MODEL = 'accounts.User'
 
+# Required by django-allauth
+SITE_ID = 1
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'accounts.middleware.CompleteProfileMiddleware',
 ]
 
 ROOT_URLCONF = 'crowdfunding.urls'
@@ -96,6 +110,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# django-allauth authentication backends (kept alongside Django's default)
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/6.1/topics/i18n/
@@ -131,3 +151,30 @@ LOGOUT_REDIRECT_URL = 'core:home'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+
+# ---------------------------------------------------------------------------
+# django-allauth settings (Facebook login)
+# ---------------------------------------------------------------------------
+# Your User model authenticates with email, not username, so allauth must
+# be told to use email-only auth to match accounts.User (USERNAME_FIELD='email').
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+
+# Your own accounts app already has an activation-email system, so we don't
+# want allauth to run its own email verification flow on top of it.
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+
+SOCIALACCOUNT_PROVIDERS = {
+    'facebook': {
+        'METHOD': 'oauth2',
+        'SCOPE': ['email', 'public_profile'],
+        'FIELDS': ['id', 'email', 'first_name', 'last_name'],
+        'VERSION': 'v19.0',
+    }
+}
+
+# Custom adapter: lets Facebook create users with no phone_number instead
+# of crashing, then CompleteProfileMiddleware forces them to add one.
+SOCIALACCOUNT_ADAPTER = 'accounts.adapters.CustomSocialAccountAdapter'
