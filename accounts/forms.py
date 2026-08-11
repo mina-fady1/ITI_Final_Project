@@ -136,3 +136,43 @@ class DeleteAccountForm(forms.Form):
         if not self.user.check_password(password):
             raise ValidationError(_("Incorrect password. Account deletion denied."))
         return password
+
+
+class ForgotPasswordForm(forms.Form):
+    """Form to request a password reset link via email."""
+    email = forms.EmailField(
+        label=_("Email"),
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'name@example.com'})
+    )
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if not User.objects.filter(email__iexact=email).exists():
+            raise ValidationError(_("No account is associated with this email address."))
+        return email.lower()
+
+
+class ResetPasswordForm(forms.Form):
+    """Form to set a new password after clicking the reset link."""
+    new_password = forms.CharField(
+        label=_("New Password"),
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'New password'}),
+        help_text=_("Must be at least 8 characters.")
+    )
+    confirm_new_password = forms.CharField(
+        label=_("Confirm New Password"),
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Confirm new password'})
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get('new_password')
+        confirm_password = cleaned_data.get('confirm_new_password')
+
+        if password and len(password) < 8:
+            self.add_error('new_password', _("Password must be at least 8 characters long."))
+
+        if password and confirm_password and password != confirm_password:
+            self.add_error('confirm_new_password', _("Passwords do not match."))
+
+        return cleaned_data
