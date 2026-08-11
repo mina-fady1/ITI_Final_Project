@@ -1,5 +1,5 @@
 from django.shortcuts import redirect
-from django.urls import reverse
+from django.urls import reverse, resolve
 from django.contrib import messages
 
 
@@ -41,9 +41,13 @@ class CompleteProfileMiddleware:
     @staticmethod
     def _resolve_url_name(request):
         try:
-            match = request.resolver_match
+            match = getattr(request, 'resolver_match', None)
+            if match is None:
+                match = resolve(request.path_info)
             if match is None:
                 return None
-            return f"{match.namespace}:{match.url_name}" if match.namespace else match.url_name
+            namespace = ":".join(match.namespaces) if match.namespaces else match.namespace
+            return f"{namespace}:{match.url_name}" if namespace else match.url_name
         except Exception:
             return None
+
