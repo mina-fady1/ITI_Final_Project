@@ -110,3 +110,34 @@ class ProjectsSystemTests(TestCase):
 
         form = ProjectForm(data=form_data, files=file_data)
         self.assertTrue(form.is_valid(), form.errors)
+
+    def test_project_form_requires_at_least_one_image(self):
+        """
+        Regression test: submitting the project form with no uploaded files
+        must fail validation (images is a required field per the spec).
+        Previously MultipleFileField.clean() silently accepted an empty
+        file list because the multi-file widget returns [] instead of None
+        when no files are attached, bypassing the required check.
+        """
+        form_data = {
+            'title': 'No Image Campaign',
+            'details': 'Campaign details text',
+            'category': self.category.id,
+            'target': '50000.00',
+            'start_time': '2026-08-08T10:00',
+            'end_time': '2026-09-08T10:00',
+            'tags_input': 'tech',
+        }
+        form = ProjectForm(data=form_data, files={})
+        self.assertFalse(form.is_valid())
+        self.assertIn('images', form.errors)
+
+        response = self.client.post(reverse('projects:create'), form_data)
+        # Should re-render the form with an error, not create the project.
+        self.assertEqual(response.status_code, 302)  # redirected to login (anonymous)
+        self.assertFalse(Project.objects.filter(title='No Image Campaign').exists())
+
+        self.client.force_login(self.creator)
+        response = self.client.post(reverse('projects:create'), form_data)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Project.objects.filter(title='No Image Campaign').exists())

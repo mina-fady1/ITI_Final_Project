@@ -19,10 +19,21 @@ class MultipleFileField(forms.FileField):
     def clean(self, data, initial=None):
         single_file_clean = super().clean
         if isinstance(data, (list, tuple)):
-            result = [single_file_clean(d, initial) for d in data]
+            files = [f for f in data if f]
+        elif data:
+            files = [data]
         else:
-            result = [single_file_clean(data, initial)]
-        return result
+            files = []
+
+        if not files:
+            # No files were actually uploaded (widget returns [] rather than
+            # None when allow_multiple_selected is set), so required must be
+            # enforced explicitly here.
+            if self.required:
+                raise ValidationError(self.error_messages['required'], code='required')
+            return []
+
+        return [single_file_clean(f, initial) for f in files]
 
 
 DATETIME_INPUT_FORMATS = [
