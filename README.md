@@ -1,88 +1,114 @@
-# Egyptian Crowdfunding Web Application (Django)
+# Egyptian Crowdfunding Web Application (CrowdFund Egypt)
 
-A full-stack, modular, secure, and responsive Django crowdfunding platform designed for Egypt, built according to the official project specification in `Django Final Project.pdf`.
+A production-ready, full-stack, modular, and responsive Django crowdfunding web application tailored for Egypt, built strictly according to the official project specifications and architecture best practices.
 
 ---
 
-## Features Implemented
+## 🚀 Key Features & System Modules
 
-### 1. Authentication System (`accounts` app)
-- **Custom User Model**: Uses `EmailField` as the login identifier (`USERNAME_FIELD = 'email'`), removing standard Django username requirements.
-- **Registration**: Captures First Name, Last Name, Email, Egyptian Mobile Phone, Password & Confirm Password, and optional Profile Picture.
-- **Egyptian Phone Validation**: Custom validator enforcing valid Egyptian mobile number formats (`010xxxxxxxx`, `011xxxxxxxx`, `012xxxxxxxx`, `015xxxxxxxx`).
-- **24-Hour Email Activation**: New user accounts are created as `is_active=False`. A secure UUID `ActivationToken` is emailed to the user. Activation links expire after 24 hours. Users cannot log in before activation.
-- **Profile Management**: View personal details, created campaigns, and donation history. Edit personal information (Email is strictly read-only). Optional fields: Birthdate, Facebook Profile URL, Country.
-- **Account Deletion**: Requires explicit user password confirmation on the backend before account deletion.
+### 1. Account & Authentication System (`accounts` app)
+* **Email-Based Authentication**: Custom `User` model using `EmailField` as the primary login identifier (`USERNAME_FIELD = 'email'`), removing traditional username constraints.
+* **Registration & Profile Creation**: Captures First Name, Last Name, Email, Egyptian Mobile Phone, Password & Confirmation, and optional Profile Picture.
+* **Egyptian Mobile Phone Validation**: Custom regex validator enforcing valid Egyptian mobile number formats (`010xxxxxxxx`, `011xxxxxxxx`, `012xxxxxxxx`, `015xxxxxxxx`).
+* **Facebook Social Login (`django-allauth`)**: Integrated OAuth2 authentication via Facebook (`accounts.adapters.CustomSocialAccountAdapter`).
+* **Profile Completion Middleware (`accounts.middleware.CompleteProfileMiddleware`)**: Restricts Facebook social login users without a phone number from creating or backing campaigns until they complete their profile with a valid Egyptian phone number.
+* **Forgot & Reset Password System**:
+  * Request password reset link via registered email.
+  * Generates single-use, 1-hour expiring UUID tokens (`PasswordResetToken`).
+  * Email notification with secure password reset link.
+* **Profile Management**: View personal details, created campaigns, and donation history. Allows updating details with read-only email protection.
+* **Account Deletion**: Requires explicit user password verification on the backend before permanently removing account data.
+
+---
 
 ### 2. Campaign Management (`projects` app)
-- **Project Creation**: Title, Details, Category, Target amount (EGP), Start/End date-times, Tags, and Multiple Image uploads.
-- **Dynamic Campaign Status**: Calculated property evaluating to `Upcoming`, `Running`, `Completed`, or `Cancelled`.
-- **25% Cancellation Threshold Rule**: Enforced securely in the service layer (`projects/services.py`). Campaign creator can cancel a project **only if total raised < 25% of target**. Rejects cancellation if total raised $\ge$ 25%.
-- **4 Similar Projects**: Displays up to 4 similar campaigns on the project detail page based on matching tag overlap (excluding current project).
-- **Image Carousel**: Image slider displaying gallery pictures on project detail page.
+* **Campaign Lifecycle**: Full CRUD for projects with Title, Description, Category, Target amount (EGP), Start/End date-times, Tags, and Multiple Image uploads.
+* **Dynamic Status Calculation**: Automatically evaluates project state:
+  * **`Upcoming`**: Start date is in the future.
+  * **`Running`**: Currently within active start and end date window.
+  * **`Completed`**: Reached end date or achieved funding goal.
+  * **`Cancelled`**: Explicitly cancelled by project creator.
+* **Strict 25% Cancellation Business Rule (`projects/services.py`)**:
+  * Project creators can cancel a campaign **only if total donations raised are less than 25% of the target amount**.
+  * If total donations reach or exceed 25% of the target, cancellation is rejected with a validation error.
+* **Tag & Category Similarity Algorithm**:
+  * Displays up to 4 similar active campaigns on the project detail page based on tag overlap.
+  * Fallbacks to category matching if no tags overlap.
+* **Image Gallery Carousel**: Interactive image slider displaying campaign photos.
+
+---
 
 ### 3. Donations System (`donations` app)
-- **Simulated EGP Donations**: Users can donate positive decimal amounts to active `Running` campaigns.
-- **Funding Metrics**: Real-time calculation of Total Raised (EGP), Remaining Target (EGP), Funding Percentage, and total donation count.
-- **Profile History**: Complete audit trail of past donations displayed on user profile.
-
-### 4. Interactions System (`interactions` app)
-- **Comments & Nested Replies (Bonus)**: Users can post comments and nested replies to existing comments. Comment owners can delete their own comments.
-- **Star Ratings**: 1 to 5 star rating system with `unique_together = ('user', 'project')` constraint. Updates existing rating if user re-rates. Displays average rating and star icons.
-- **Reporting System**: Users can report inappropriate projects or comments with a reason. Managed via Django Admin.
-
-### 5. Homepage & Search (`core` app)
-- **Top 5 Rated Running Projects**: Hero slider displaying the top 5 highest-rated currently active campaigns.
-- **Latest 5 Projects**: Grid of the 5 newest campaigns.
-- **Featured 5 Projects**: Grid of the 5 latest administrator-featured campaigns.
-- **Categories Listing**: Pill filter list of categories with campaign counts.
-- **Search Engine**: Case-insensitive search by project title or tag name.
-
-### 6. Admin Panel Setup (`accounts`, `projects`, `donations`, `interactions`)
-- Configured Django Admin with inline image editing, filtering, search, custom list displays, and actions to toggle `is_featured` or mark reports as reviewed.
+* **EGP Donation Engine**: Allows authenticated users to make simulated EGP contributions to active (`Running`) projects.
+* **Real-time Financial Metrics**: Automatically computes:
+  * Total Raised Amount (EGP)
+  * Remaining Goal Amount (EGP)
+  * Funding Goal Progress Percentage (%)
+  * Total Donor Count
+* **Donor Audit Trail**: Complete historical list of user contributions displayed in the user profile dashboard.
 
 ---
 
-## Technology Stack
-
-- **Backend**: Python 3.12, Django 6.1, Django ORM, Django Authentication, Django Forms
-- **Frontend**: HTML5, CSS3, Bootstrap 5, FontAwesome 6, Google Fonts (Outfit)
-- **Database**: SQLite3 (compatible with PostgreSQL)
-- **Image Processing**: Pillow
-- **Environment Management**: `python-dotenv`
+### 4. Community Interactions (`interactions` app)
+* **Threaded Comments & Nested Replies**: Users can post top-level comments and nested replies on project pages. Comment authors can delete their own comments.
+* **Star Rating System**: 1 to 5-star rating mechanism with a database `unique_together = ('user', 'project')` constraint. Automatically updates existing ratings if a user re-rates a project and displays average rating scores.
+* **Abuse Reporting System**: Users can flag inappropriate projects or offensive comments with a stated reason. Reports are submitted to the Django Admin moderation pipeline.
 
 ---
 
-## Installation & Setup Instructions
+### 5. Discovery & Search (`core` app)
+* **Top 5 Rated Hero Slider**: Dynamic showcase of the 5 highest-rated active campaigns.
+* **Newest Projects Grid**: Latest 5 created campaigns.
+* **Admin-Featured Grid**: Latest 5 administrator-featured campaigns (`is_featured=True`).
+* **Category Navigation**: Filter projects by category chips with dynamic campaign count badges.
+* **Search Engine**: Case-insensitive search across project titles and tag names.
 
-### 1. Prerequisites
-Ensure Python 3.10+ is installed on your system.
+---
 
-### 2. Virtual Environment Setup
-The project is configured to run inside a local `venv` directory:
+### 6. Django Administration Interface
+* Tailored Admin interface for `accounts`, `projects`, `donations`, `interactions`, and `sites`.
+* Inline image management, search filters, report review actions, and featured campaign toggles.
 
-```bash
-# Navigate to project directory
-cd "c:\Users\Administrator\Desktop\iti tasks\day18\ITI_Final_Project"
+---
 
+## 🛠️ Technology Stack
+
+| Layer | Technology |
+| :--- | :--- |
+| **Backend Framework** | Python 3.12, Django 6.1 |
+| **Authentication & OAuth** | Django Auth, `django-allauth` (Facebook OAuth2) |
+| **Database** | SQLite3 (Production ready for PostgreSQL / MySQL) |
+| **Frontend Framework** | HTML5, CSS3, Vanilla JS, Bootstrap 5, FontAwesome 6 |
+| **Design & Typography** | Google Fonts (Outfit), Custom Glassmorphism CSS |
+| **Image Processing** | Pillow 12.3.0 |
+| **Environment Security** | `python-dotenv` |
+
+---
+
+## ⚙️ Installation & Setup Guide
+
+### 1. Clone & Navigate
+```powershell
+git clone <repository-url>
+cd ITI_Final_Project
+```
+
+### 2. Set Up Virtual Environment
+```powershell
 # Create virtual environment
 python -m venv venv
 
-# Activate virtual environment
-# On Windows (PowerShell):
+# Activate virtual environment (PowerShell)
 .\venv\Scripts\Activate.ps1
-# On Windows (CMD):
-.\venv\Scripts\activate.bat
 ```
 
 ### 3. Install Dependencies
-```bash
+```powershell
 pip install -r requirements.txt
 ```
 
-### 4. Environment Configuration (`.env`)
-Create a `.env` file in the project root directory (or use `.env.example` as reference):
-
+### 4. Configure Environment Variables (`.env`)
+Create a `.env` file in the project root directory:
 ```env
 SECRET_KEY=django-insecure-crowdfunding-egypt-project-secret-key-2026
 DEBUG=True
@@ -91,87 +117,100 @@ EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
 DEFAULT_FROM_EMAIL=no-reply@crowdfund-egypt.com
 ```
 
----
-
-## Database Migrations & Initial Setup
-
-```bash
+### 5. Database Setup & Seeding
+```powershell
 # Apply database migrations
-python manage.py migrate
+.\venv\Scripts\python.exe manage.py migrate
 
 # Seed initial categories and tags
-python seed.py
+.\venv\Scripts\python.exe seed.py
 
-# Create default superuser (Admin)
-python create_superuser.py
+# Create default admin superuser
+.\venv\Scripts\python.exe create_superuser.py
 ```
 
-Default Admin Credentials:
+**Default Administrator Credentials**:
 - **Email**: `admin@crowdfund-egypt.com`
 - **Password**: `admin`
 
 ---
 
-## Running the Application
+## 🏃 Running the Application
 
-Start the local Django development server:
-
-```bash
-python manage.py runserver
+Start the development server:
+```powershell
+.\venv\Scripts\python.exe manage.py runserver
 ```
 
-Open your browser and visit:
-- **Application Homepage**: [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
-- **Django Admin Interface**: [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/)
+Access the application:
+* **Web Application**: [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
+* **Admin Portal**: [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/)
 
 ---
 
-## Testing Email Activation in Development
+## 🧪 Automated Testing Suite
 
-During development, Django is configured to output sent emails directly to the console terminal (`EmailBackend`).
+The application includes a comprehensive unit test suite with 32 automated tests covering authentication, model constraints, business logic, middleware, and project cancellation rules.
 
-1. Register a new user at `http://127.0.0.1:8000/accounts/register/`.
-2. Look at your terminal running `python manage.py runserver` or test output to find the printed email containing the activation URL (e.g., `http://127.0.0.1:8000/accounts/activate/<uuid-token>/`).
-3. Click or copy-paste the activation URL into your browser to activate the account.
-4. Log in using your email and password.
-
----
-
-## Running Automated Tests
-
-Run the full automated test suite covering all 5 Django apps:
-
-```bash
-python manage.py test accounts projects donations interactions core
+Run all unit tests:
+```powershell
+.\venv\Scripts\python.exe manage.py test
 ```
 
+**Test Coverage Summary**:
+- `accounts`: Registration, Egyptian phone validation, Password Reset token expiration & reuse prevention, Complete Profile middleware redirection, Profile deletion.
+- `projects`: Project lifecycle, status calculation, 25% target cancellation rule, tag similarity algorithm.
+- `donations`: Contribution validation, project total updates.
+- `interactions`: Rating updates, nested comments, reporting workflow.
+- `core`: Homepage view routing & search query filters.
+
 ---
 
-## Project Structure Overview
+## 📁 Repository Structure
 
 ```text
 ITI_Final_Project/
-├── venv/                           # Python Virtual Environment
-├── manage.py
-├── .env                            # Secret environment variables
-├── .gitignore
-├── requirements.txt
-├── seed.py                         # Category & Tag seed script
-├── create_superuser.py             # Superuser creation script
-├── README.md                       # Project documentation
+├── crowdfunding/                   # Root Django configuration & settings
+│   ├── settings.py                 # Core settings, AllAuth & middleware config
+│   ├── urls.py                     # Main URL routing table
+│   └── wsgi.py
 │
-├── crowdfunding/                   # Core Django project configuration
-│   ├── settings.py
-│   ├── urls.py
-│   ├── wsgi.py
-│   └── asgi.py
+├── accounts/                       # Authentication, User Profile & Reset App
+│   ├── adapters.py                 # AllAuth Facebook adapter
+│   ├── middleware.py               # Phone completion enforcement middleware
+│   ├── models.py                   # Custom User, Activation & PasswordReset tokens
+│   ├── forms.py                    # Auth & profile forms
+│   ├── views.py                    # Auth, profile, password reset views
+│   └── tests.py                    # Accounts unit tests
 │
-├── accounts/                       # User Auth, Activation & Profile App
-├── projects/                       # Campaigns, Categories & Tags App
-├── donations/                      # EGP Donation System App
+├── projects/                       # Projects, Categories & Tags App
+│   ├── models.py                   # Project, Category, Tag, ProjectImage models
+│   ├── services.py                 # 25% cancellation rule & tag similarity logic
+│   ├── forms.py                    # Project creation & edit forms
+│   ├── views.py                    # Campaign CRUD views
+│   └── tests.py                    # Project unit tests
+│
+├── donations/                      # Donation System App
+│   ├── models.py                   # Donation model
+│   ├── forms.py                    # Donation form
+│   ├── views.py                    # Donation processing views
+│   └── tests.py                    # Donation unit tests
+│
 ├── interactions/                   # Comments, Ratings & Reports App
-├── core/                           # Homepage, Categories & Search App
-├── templates/                      # Bootstrap 5 HTML templates
-├── static/                         # CSS, JS, and static assets
-└── media/                          # Uploaded profile & campaign images
+│   ├── models.py                   # Rating, Comment, Report models
+│   ├── forms.py                    # Comment, Rating, Report forms
+│   ├── views.py                    # Interaction views & handlers
+│   └── tests.py                    # Interaction unit tests
+│
+├── core/                           # Homepage & Search App
+│   ├── views.py                    # Home & category views
+│   └── tests.py                    # Core views unit tests
+│
+├── templates/                      # Modular HTML5/Bootstrap 5 templates
+├── static/                         # Static assets (CSS, JS, images)
+├── media/                          # Uploaded user profiles & project media
+├── seed.py                         # Initial database seeding script
+├── create_superuser.py             # Quick admin setup script
+├── requirements.txt                # Python package dependencies
+└── README.md                       # Project documentation
 ```
