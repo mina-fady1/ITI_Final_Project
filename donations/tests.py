@@ -65,6 +65,14 @@ class DonationsAndCancellationTests(TestCase):
         response = self.client.post(donate_url, {'amount': '-500.00'}, follow=True)
         self.assertEqual(self.project.total_donations, Decimal('0.00'))
 
+    def test_creator_cannot_donate_to_own_project(self):
+        """Test project creators are prevented from donating to their own campaigns."""
+        self.client.force_login(self.creator)
+        donate_url = reverse('donations:donate', kwargs={'pk': self.project.pk})
+
+        response = self.client.post(donate_url, {'amount': '1000.00'}, follow=True)
+        self.assertEqual(self.project.total_donations, Decimal('0.00'))
+
     def test_25_percent_boundary_rule(self):
         """
         PDF Rule Test:

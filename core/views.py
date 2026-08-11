@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404
 from django.db.models import Q, Avg, Count
+from django.db.models.functions import Coalesce
 from django.core.paginator import Paginator
 from django.utils import timezone
 from projects.models import Project, Category, Tag
@@ -20,7 +21,7 @@ def home(request):
         start_time__lte=now,
         end_time__gte=now,
         is_cancelled=False
-    ).annotate(avg_rate=Avg('ratings__value'))\
+    ).annotate(avg_rate=Coalesce(Avg('ratings__value'), 0.0))\
      .order_by('-avg_rate', '-created_at')\
      .prefetch_related('images', 'category')[:5]
 

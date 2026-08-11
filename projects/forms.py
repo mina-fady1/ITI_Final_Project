@@ -127,7 +127,8 @@ class ProjectForm(forms.ModelForm):
         tags_str = self.cleaned_data.get('tags_input', '')
         project.tags.clear()
         if tags_str:
-            tag_names = [t.strip().lower() for t in tags_str.split(',') if t.strip()]
+            tag_names = [t.strip().lower()[:50] for t in tags_str.split(',') if t.strip()]
             for name in tag_names:
-                tag_obj, _ = Tag.objects.get_or_create(name=name)
-                project.tags.add(tag_obj)
+                if name:
+                    tag_obj, _ = Tag.objects.get_or_create(name=name)
+                    project.tags.add(tag_obj)

@@ -12,6 +12,10 @@ def donate(request, pk):
     project = get_object_or_404(Project, pk=pk)
 
     if request.method == 'POST':
+        if project.creator == request.user:
+            messages.error(request, "Project creators cannot donate to their own campaign.")
+            return redirect('projects:detail', pk=project.pk)
+
         if not project.is_running:
             messages.error(request, "Donations are only allowed for actively running campaigns.")
             return redirect('projects:detail', pk=project.pk)

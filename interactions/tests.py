@@ -67,6 +67,22 @@ class InteractionsSystemTests(TestCase):
         response = self.client.post(delete_url)
         self.assertEqual(response.status_code, 403)  # PermissionDenied
 
+    def test_nested_reply_flattens_to_top_level_parent(self):
+        """Test replying to a reply attaches to top-level comment parent."""
+        self.client.force_login(self.user1)
+        add_comment_url = reverse('interactions:add_comment', kwargs={'pk': self.project.pk})
+
+        self.client.post(add_comment_url, {'content': 'Root Comment'})
+        root = Comment.objects.get(parent=None)
+
+        self.client.post(add_comment_url, {'content': 'Reply 1', 'parent_id': str(root.id)})
+        reply1 = Comment.objects.get(content='Reply 1')
+
+        # Reply to reply1 -> should attach to root
+        self.client.post(add_comment_url, {'content': 'Reply 2', 'parent_id': str(reply1.id)})
+        reply2 = Comment.objects.get(content='Reply 2')
+        self.assertEqual(reply2.parent, root)
+
     def test_rating_uniqueness_and_average(self):
         """Test one rating per user, rating update, and average rating calculation."""
         self.client.force_login(self.user1)

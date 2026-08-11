@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from django.urls import reverse
 from django.conf import settings
+from django.utils.http import url_has_allowed_host_and_scheme
 
 from .forms import (
     RegistrationForm,
@@ -143,10 +144,13 @@ def login_view(request):
             )
 
             next_url = request.GET.get("next")
+            if next_url and url_has_allowed_host_and_scheme(
+                url=next_url,
+                allowed_hosts={request.get_host()}
+            ):
+                return redirect(next_url)
 
-            return redirect(
-                next_url if next_url else "core:home"
-            )
+            return redirect("core:home")
 
     else:
         form = LoginForm()

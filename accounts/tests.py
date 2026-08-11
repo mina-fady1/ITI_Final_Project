@@ -99,6 +99,27 @@ class AccountsSystemTests(TestCase):
         response = self.client.get(activate_url, follow=True)
         self.assertRedirects(response, self.login_url)
 
+    def test_open_redirect_prevented_on_login(self):
+        """Test external URLs in next parameter are rejected on login."""
+        # Activate user to allow login
+        user = User.objects.get(email='ahmed@example.com') if User.objects.filter(email='ahmed@example.com').exists() else User.objects.create_user(
+            email='ahmed@example.com',
+            password='StrongPassword123',
+            first_name='Ahmed',
+            last_name='Hassan',
+            phone_number='01012345678',
+            is_active=True
+        )
+        user.is_active = True
+        user.save()
+
+        login_url_with_next = f"{self.login_url}?next=https://evil-site.com"
+        response = self.client.post(login_url_with_next, {
+            'email': 'ahmed@example.com',
+            'password': 'StrongPassword123'
+        })
+        self.assertRedirects(response, reverse('core:home'))
+
     def test_account_deletion_with_password(self):
         """Test account deletion requires correct password."""
         user = User.objects.create_user(

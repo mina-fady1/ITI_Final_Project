@@ -22,6 +22,8 @@ def add_comment(request, pk):
         parent_comment = None
         if parent_id:
             parent_comment = get_object_or_404(Comment, pk=parent_id, project=project)
+            if parent_comment.parent is not None:
+                parent_comment = parent_comment.parent
 
         Comment.objects.create(
             user=request.user,

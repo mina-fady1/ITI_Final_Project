@@ -141,3 +141,16 @@ class ProjectsSystemTests(TestCase):
         response = self.client.post(reverse('projects:create'), form_data)
         self.assertEqual(response.status_code, 200)
         self.assertFalse(Project.objects.filter(title='No Image Campaign').exists())
+
+    def test_tags_input_truncates_long_names(self):
+        """Test tags longer than 50 characters are safely truncated."""
+        long_tag = 'a' * 100
+        form_data = {
+            'tags_input': f"{long_tag}, normaltag"
+        }
+        form = ProjectForm(data=form_data)
+        form.cleaned_data = {'tags_input': f"{long_tag}, normaltag"}
+        form.save_tags(self.project)
+
+        self.assertTrue(self.project.tags.filter(name='a' * 50).exists())
+        self.assertTrue(self.project.tags.filter(name='normaltag').exists())

@@ -150,7 +150,7 @@ Access the application:
 
 ## 🧪 Automated Testing Suite
 
-The application includes a comprehensive unit test suite with 32 automated tests covering authentication, model constraints, business logic, middleware, and project cancellation rules.
+The application includes a comprehensive unit test suite with **36 automated tests** covering authentication, model constraints, business logic, middleware, security protections, and project cancellation rules.
 
 Run all unit tests:
 ```powershell
@@ -158,11 +158,11 @@ Run all unit tests:
 ```
 
 **Test Coverage Summary**:
-- `accounts`: Registration, Egyptian phone validation, Password Reset token expiration & reuse prevention, Complete Profile middleware redirection, Profile deletion.
-- `projects`: Project lifecycle, status calculation, 25% target cancellation rule, tag similarity algorithm.
-- `donations`: Contribution validation, project total updates.
-- `interactions`: Rating updates, nested comments, reporting workflow.
-- `core`: Homepage view routing & search query filters.
+- `accounts`: Registration, Egyptian phone validation, Password Reset token expiration & reuse prevention, Complete Profile middleware redirection, Open Redirect login protection, Profile deletion.
+- `projects`: Project lifecycle, status calculation, 25% target cancellation rule, tag similarity algorithm, tag input truncation.
+- `donations`: Contribution validation, project total updates, creator self-donation restriction.
+- `interactions`: Rating updates, nested comments & 1-level reply flattening, reporting workflow.
+- `core`: Homepage view routing, null-safe rating sorting (`Coalesce`), & search query filters.
 
 ---
 
