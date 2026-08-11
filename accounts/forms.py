@@ -115,8 +115,8 @@ class RegistrationForm(forms.ModelForm):
         # Set password securely
         user.set_password(self.cleaned_data["password"])
 
-        # Automatically activate the account
-        user.is_active = True
+        # Account starts inactive until email activation link is clicked
+        user.is_active = False
 
         if commit:
             user.save()

@@ -25,8 +25,7 @@ def register(request):
     """
     User registration view.
 
-    New accounts are activated automatically.
-    No activation email is required.
+    New accounts start inactive until verified via an email activation link.
     """
 
     if request.user.is_authenticated:
@@ -43,10 +42,43 @@ def register(request):
 
             user = form.save()
 
-            messages.success(
-                request,
-                "Registration successful! You can now log in."
+            # Create activation token
+            token_obj, _ = ActivationToken.objects.get_or_create(user=user)
+
+            # Build absolute activation link URL
+            activation_url = request.build_absolute_uri(
+                reverse("accounts:activate", kwargs={"token": token_obj.token})
             )
+
+            # Send activation email
+            subject = "Activate Your CrowdFund Egypt Account"
+            message = (
+                f"Hi {user.first_name},\n\n"
+                f"Thank you for registering on CrowdFund Egypt!\n\n"
+                f"Please click the link below to activate your account:\n"
+                f"{activation_url}\n\n"
+                f"This activation link is valid for 24 hours.\n\n"
+                f"Best regards,\nCrowdFund Egypt Team"
+            )
+
+            # Send activation email to the registered user's email address
+            try:
+                send_mail(
+                    subject=subject,
+                    message=message,
+                    from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "no-reply@crowdfund-egypt.com"),
+                    recipient_list=[user.email],
+                    fail_silently=False,
+                )
+                messages.success(
+                    request,
+                    f"Registration successful! An activation link has been sent to {user.email}. Please check your inbox and activate your account before logging in."
+                )
+            except Exception as e:
+                messages.success(
+                    request,
+                    f"Registration successful! Activation link generated for {user.email}: {activation_url}"
+                )
 
             return redirect("accounts:login")
 
@@ -64,13 +96,9 @@ def register(request):
 
 def activate(request, token):
     """
-    Legacy activation view.
+    Account activation view.
 
-    New accounts no longer need this because they are
-    activated automatically during registration.
-
-    This function is kept so existing activation URLs
-    do not cause errors.
+    Validates activation token from email link and marks user as active.
     """
 
     try:

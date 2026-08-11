@@ -27,13 +27,19 @@ class AccountsSystemTests(TestCase):
             'confirm_password': 'StrongPassword123'
         }
 
-    def test_registration_creates_active_user(self):
-        """Test registration creates an active user."""
+    def test_registration_creates_inactive_user_and_sends_email(self):
+        """Test registration creates an inactive user and sends an activation email."""
         response = self.client.post(self.register_url, self.valid_user_data)
         self.assertEqual(response.status_code, 302)
 
         user = User.objects.get(email='ahmed@example.com')
-        self.assertTrue(user.is_active)
+        self.assertFalse(user.is_active)
+
+        # Check activation token and outbox email
+        token = ActivationToken.objects.get(user=user)
+        self.assertIsNotNone(token)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn(str(token.token), mail.outbox[0].body)
 
     def test_invalid_egyptian_phone_rejected(self):
         """Test non-Egyptian phone numbers are rejected by validator."""
