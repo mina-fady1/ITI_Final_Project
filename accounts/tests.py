@@ -27,14 +27,13 @@ class AccountsSystemTests(TestCase):
             'confirm_password': 'StrongPassword123'
         }
 
-    def test_registration_creates_inactive_user_and_token(self):
-        """Test registration creates inactive user and an activation token."""
+    def test_registration_creates_active_user(self):
+        """Test registration creates an active user."""
         response = self.client.post(self.register_url, self.valid_user_data)
         self.assertEqual(response.status_code, 302)
 
         user = User.objects.get(email='ahmed@example.com')
-        self.assertFalse(user.is_active)
-        self.assertTrue(ActivationToken.objects.filter(user=user).exists())
+        self.assertTrue(user.is_active)
 
     def test_invalid_egyptian_phone_rejected(self):
         """Test non-Egyptian phone numbers are rejected by validator."""
@@ -46,19 +45,32 @@ class AccountsSystemTests(TestCase):
 
     def test_inactive_user_cannot_login(self):
         """Test unactivated user cannot log in."""
-        self.client.post(self.register_url, self.valid_user_data)
+        user = User.objects.create_user(
+            email='inactive@example.com',
+            password='StrongPassword123',
+            first_name='Inactive',
+            last_name='User',
+            phone_number='01012345678',
+            is_active=False
+        )
         response = self.client.post(self.login_url, {
-            'email': 'ahmed@example.com',
+            'email': 'inactive@example.com',
             'password': 'StrongPassword123'
         })
         self.assertEqual(response.status_code, 200)
-        self.assertFormError(response.context['form'], None, 'Your account is not activated yet. Please check your email for the activation link.')
+        self.assertFormError(response.context['form'], None, 'This account is currently inactive.')
 
     def test_activation_link_flow_and_expiration(self):
-        """Test activation succeeds within 24h."""
-        self.client.post(self.register_url, self.valid_user_data)
-        user = User.objects.get(email='ahmed@example.com')
-        token = ActivationToken.objects.get(user=user)
+        """Test activation succeeds within 24h for a manually tokenized inactive user."""
+        user = User.objects.create_user(
+            email='inactive2@example.com',
+            password='StrongPassword123',
+            first_name='Inactive',
+            last_name='Two',
+            phone_number='01012345678',
+            is_active=False
+        )
+        token = ActivationToken.objects.create(user=user)
 
         activate_url = reverse('accounts:activate', kwargs={'token': token.token})
         response = self.client.get(activate_url)
@@ -68,10 +80,16 @@ class AccountsSystemTests(TestCase):
         self.assertTrue(user.is_active)
 
     def test_expired_activation_token_fails(self):
-        """Test activation token older than 24 hours fails and removes user."""
-        self.client.post(self.register_url, self.valid_user_data)
-        user = User.objects.get(email='ahmed@example.com')
-        token = ActivationToken.objects.get(user=user)
+        """Test activation token older than 24 hours fails."""
+        user = User.objects.create_user(
+            email='inactive3@example.com',
+            password='StrongPassword123',
+            first_name='Inactive',
+            last_name='Three',
+            phone_number='01012345678',
+            is_active=False
+        )
+        token = ActivationToken.objects.create(user=user)
 
         # Backdate token by 25 hours
         token.created_at = timezone.now() - timedelta(hours=25)
@@ -79,7 +97,7 @@ class AccountsSystemTests(TestCase):
 
         activate_url = reverse('accounts:activate', kwargs={'token': token.token})
         response = self.client.get(activate_url, follow=True)
-        self.assertFalse(User.objects.filter(email='ahmed@example.com').exists())
+        self.assertRedirects(response, self.login_url)
 
     def test_account_deletion_with_password(self):
         """Test account deletion requires correct password."""
