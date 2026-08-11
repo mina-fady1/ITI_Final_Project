@@ -6,6 +6,7 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls', namespace='accounts')),
+    path('accounts/social/', include('allauth.urls')),  # Facebook login (django-allauth)
     path('projects/', include('projects.urls', namespace='projects')),
     path('donations/', include('donations.urls', namespace='donations')),
     path('interactions/', include('interactions.urls', namespace='interactions')),
