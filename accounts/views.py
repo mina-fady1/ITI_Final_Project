@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
@@ -12,22 +12,27 @@ from .forms import (
     ProfileEditForm,
     DeleteAccountForm,
     ForgotPasswordForm,
-    ResetPasswordForm
+    ResetPasswordForm,
 )
 
 from .models import ActivationToken, PasswordResetToken
-
 
 User = get_user_model()
 
 
 def register(request):
-    """User registration view. Sends activation email upon success."""
+    """
+    User registration view.
+
+    New accounts are activated automatically.
+    No activation email is required.
+    """
 
     if request.user.is_authenticated:
-        return redirect('core:home')
+        return redirect("core:home")
 
-    if request.method == 'POST':
+    if request.method == "POST":
+
         form = RegistrationForm(
             request.POST,
             request.FILES
@@ -37,80 +42,41 @@ def register(request):
 
             user = form.save()
 
-            token = ActivationToken.objects.create(
-                user=user
+            messages.success(
+                request,
+                "Registration successful! You can now log in."
             )
 
-            # Build absolute activation URL.
-            activation_url = request.build_absolute_uri(
-                reverse(
-                    'accounts:activate',
-                    kwargs={
-                        'token': token.token
-                    }
-                )
-            )
-
-            # Email information.
-            subject = "Activate your CrowdFund Egypt Account"
-
-            message = (
-                f"Hello {user.first_name},\n\n"
-                f"Thank you for registering at CrowdFund Egypt!\n"
-                f"Please activate your account by clicking "
-                f"the link below:\n\n"
-                f"{activation_url}\n\n"
-                f"Note: This link will expire in 24 hours.\n\n"
-                f"Best regards,\n"
-                f"CrowdFund Egypt Team"
-            )
-
-            try:
-
-                send_mail(
-                    subject,
-                    message,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [user.email],
-                    fail_silently=False
-                )
-
-                messages.success(
-                    request,
-                    "Registration successful! Please check your "
-                    "email to activate your account before logging in."
-                )
-
-            except Exception as e:
-
-                messages.warning(
-                    request,
-                    "Registration complete, but failed to send email. "
-                    "Please contact support or check console logs."
-                )
-
-            return redirect('accounts:login')
+            return redirect("accounts:login")
 
     else:
         form = RegistrationForm()
 
     return render(
         request,
-        'accounts/register.html',
+        "accounts/register.html",
         {
-            'form': form
+            "form": form
         }
     )
 
 
 def activate(request, token):
-    """Activates user account using UUID token if valid (<24h)."""
+    """
+    Legacy activation view.
+
+    New accounts no longer need this because they are
+    activated automatically during registration.
+
+    This function is kept so existing activation URLs
+    do not cause errors.
+    """
 
     try:
 
         activation_token = (
             ActivationToken.objects
-            .select_related('user')
+            .select_related("user")
             .get(token=token)
         )
 
@@ -121,49 +87,41 @@ def activate(request, token):
             "Invalid activation token."
         )
 
-        return redirect('accounts:login')
+        return redirect("accounts:login")
 
     if not activation_token.is_valid():
 
         messages.error(
             request,
-            "This activation link has expired "
-            "(older than 24 hours). Please register again."
+            "This activation link has expired."
         )
-
-        user = activation_token.user
 
         activation_token.delete()
 
-        if not user.is_active:
-            user.delete()
-
-        return redirect('accounts:register')
+        return redirect("accounts:login")
 
     user = activation_token.user
 
     user.is_active = True
-
     user.save()
 
     activation_token.delete()
 
     messages.success(
         request,
-        "Your account has been activated successfully! "
-        "You can now log in."
+        "Your account has been activated successfully!"
     )
 
-    return redirect('accounts:login')
+    return redirect("accounts:login")
 
 
 def login_view(request):
     """User login view."""
 
     if request.user.is_authenticated:
-        return redirect('core:home')
+        return redirect("core:home")
 
-    if request.method == 'POST':
+    if request.method == "POST":
 
         form = LoginForm(request.POST)
 
@@ -171,13 +129,12 @@ def login_view(request):
 
             user = form.user
 
-            # Explicitly specify the authentication backend.
-            # This is required because the project has multiple
-            # authentication backends configured.
+            # Explicit backend because the project has
+            # multiple authentication backends configured.
             login(
                 request,
                 user,
-                backend='django.contrib.auth.backends.ModelBackend'
+                backend="django.contrib.auth.backends.ModelBackend"
             )
 
             messages.success(
@@ -185,10 +142,10 @@ def login_view(request):
                 f"Welcome back, {user.first_name}!"
             )
 
-            next_url = request.GET.get('next')
+            next_url = request.GET.get("next")
 
             return redirect(
-                next_url if next_url else 'core:home'
+                next_url if next_url else "core:home"
             )
 
     else:
@@ -196,9 +153,9 @@ def login_view(request):
 
     return render(
         request,
-        'accounts/login.html',
+        "accounts/login.html",
         {
-            'form': form
+            "form": form
         }
     )
 
@@ -213,7 +170,7 @@ def logout_view(request):
         "You have been logged out."
     )
 
-    return redirect('core:home')
+    return redirect("core:home")
 
 
 @login_required
@@ -224,34 +181,34 @@ def profile_view(request):
 
     created_projects = (
         user.projects
-        .prefetch_related('images')
+        .prefetch_related("images")
         .all()
     )
 
     user_donations = (
         user.donations
-        .select_related('project')
-        .order_by('-created_at')
+        .select_related("project")
+        .order_by("-created_at")
     )
 
     context = {
-        'profile_user': user,
-        'created_projects': created_projects,
-        'user_donations': user_donations,
+        "profile_user": user,
+        "created_projects": created_projects,
+        "user_donations": user_donations,
     }
 
     return render(
         request,
-        'accounts/profile.html',
+        "accounts/profile.html",
         context
     )
 
 
 @login_required
 def edit_profile(request):
-    """Edits user profile. Email is read-only."""
+    """Edits user profile."""
 
-    if request.method == 'POST':
+    if request.method == "POST":
 
         form = ProfileEditForm(
             request.POST,
@@ -268,7 +225,7 @@ def edit_profile(request):
                 "Your profile has been updated successfully."
             )
 
-            return redirect('accounts:profile')
+            return redirect("accounts:profile")
 
     else:
 
@@ -278,9 +235,9 @@ def edit_profile(request):
 
     return render(
         request,
-        'accounts/edit_profile.html',
+        "accounts/edit_profile.html",
         {
-            'form': form
+            "form": form
         }
     )
 
@@ -289,7 +246,7 @@ def edit_profile(request):
 def delete_account(request):
     """Deletes user account after password verification."""
 
-    if request.method == 'POST':
+    if request.method == "POST":
 
         form = DeleteAccountForm(
             user=request.user,
@@ -301,7 +258,6 @@ def delete_account(request):
             user = request.user
 
             logout(request)
-
             user.delete()
 
             messages.info(
@@ -309,7 +265,7 @@ def delete_account(request):
                 "Your account has been deleted permanently."
             )
 
-            return redirect('core:home')
+            return redirect("core:home")
 
     else:
 
@@ -319,9 +275,9 @@ def delete_account(request):
 
     return render(
         request,
-        'accounts/delete_confirm.html',
+        "accounts/delete_confirm.html",
         {
-            'form': form
+            "form": form
         }
     )
 
@@ -329,7 +285,7 @@ def delete_account(request):
 def forgot_password(request):
     """Requests a password reset link to be sent via email."""
 
-    if request.method == 'POST':
+    if request.method == "POST":
 
         form = ForgotPasswordForm(
             request.POST
@@ -337,7 +293,7 @@ def forgot_password(request):
 
         if form.is_valid():
 
-            email = form.cleaned_data['email']
+            email = form.cleaned_data["email"]
 
             user = User.objects.get(
                 email__iexact=email
@@ -349,9 +305,9 @@ def forgot_password(request):
 
             reset_url = request.build_absolute_uri(
                 reverse(
-                    'accounts:reset_password',
+                    "accounts:reset_password",
                     kwargs={
-                        'token': token.token
+                        "token": token.token
                     }
                 )
             )
@@ -392,7 +348,7 @@ def forgot_password(request):
                     "Please contact support or check console logs."
                 )
 
-            return redirect('accounts:login')
+            return redirect("accounts:login")
 
     else:
 
@@ -400,21 +356,21 @@ def forgot_password(request):
 
     return render(
         request,
-        'accounts/forgot_password.html',
+        "accounts/forgot_password.html",
         {
-            'form': form
+            "form": form
         }
     )
 
 
 def reset_password(request, token):
-    """Sets a new password after validating reset token (<1h, unused)."""
+    """Sets a new password after validating the reset token."""
 
     try:
 
         reset_token = (
             PasswordResetToken.objects
-            .select_related('user')
+            .select_related("user")
             .get(token=token)
         )
 
@@ -426,7 +382,7 @@ def reset_password(request, token):
         )
 
         return redirect(
-            'accounts:forgot_password'
+            "accounts:forgot_password"
         )
 
     if not reset_token.is_valid():
@@ -438,10 +394,10 @@ def reset_password(request, token):
         )
 
         return redirect(
-            'accounts:forgot_password'
+            "accounts:forgot_password"
         )
 
-    if request.method == 'POST':
+    if request.method == "POST":
 
         form = ResetPasswordForm(
             request.POST
@@ -452,13 +408,12 @@ def reset_password(request, token):
             user = reset_token.user
 
             user.set_password(
-                form.cleaned_data['new_password']
+                form.cleaned_data["new_password"]
             )
 
             user.save()
 
             reset_token.used = True
-
             reset_token.save()
 
             messages.success(
@@ -468,7 +423,7 @@ def reset_password(request, token):
             )
 
             return redirect(
-                'accounts:login'
+                "accounts:login"
             )
 
     else:
@@ -477,8 +432,8 @@ def reset_password(request, token):
 
     return render(
         request,
-        'accounts/reset_password.html',
+        "accounts/reset_password.html",
         {
-            'form': form
+            "form": form
         }
     )
