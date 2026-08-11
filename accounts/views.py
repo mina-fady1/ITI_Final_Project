@@ -5,8 +5,11 @@ from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from django.urls import reverse
 from django.conf import settings
-from .forms import RegistrationForm, LoginForm, ProfileEditForm, DeleteAccountForm
-from .models import ActivationToken
+from .forms import (
+    RegistrationForm, LoginForm, ProfileEditForm, DeleteAccountForm,
+    ForgotPasswordForm, ResetPasswordForm
+)
+from .models import ActivationToken, PasswordResetToken
 
 User = get_user_model()
 
@@ -160,3 +163,67 @@ def delete_account(request):
         form = DeleteAccountForm(user=request.user)
 
     return render(request, 'accounts/delete_confirm.html', {'form': form})
+
+
+def forgot_password(request):
+    """Requests a password reset link to be sent via email."""
+    if request.method == 'POST':
+        form = ForgotPasswordForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            user = User.objects.get(email__iexact=email)
+            token = PasswordResetToken.objects.create(user=user)
+
+            reset_url = request.build_absolute_uri(
+                reverse('accounts:reset_password', kwargs={'token': token.token})
+            )
+
+            subject = "Reset your CrowdFund Egypt password"
+            message = (
+                f"Hello {user.first_name},\n\n"
+                f"We received a request to reset your password.\n"
+                f"Click the link below to set a new password:\n\n"
+                f"{reset_url}\n\n"
+                f"Note: This link will expire in 1 hour. If you didn't request this, ignore this email.\n\n"
+                f"Best regards,\nCrowdFund Egypt Team"
+            )
+
+            try:
+                send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
+                messages.success(request, "A password reset link has been sent to your email.")
+            except Exception:
+                messages.warning(request, "Could not send the email. Please contact support or check console logs.")
+
+            return redirect('accounts:login')
+    else:
+        form = ForgotPasswordForm()
+
+    return render(request, 'accounts/forgot_password.html', {'form': form})
+
+
+def reset_password(request, token):
+    """Sets a new password after validating the reset token (<1h, unused)."""
+    try:
+        reset_token = PasswordResetToken.objects.select_related('user').get(token=token)
+    except PasswordResetToken.DoesNotExist:
+        messages.error(request, "Invalid password reset link.")
+        return redirect('accounts:forgot_password')
+
+    if not reset_token.is_valid():
+        messages.error(request, "This password reset link has expired or was already used. Please request a new one.")
+        return redirect('accounts:forgot_password')
+
+    if request.method == 'POST':
+        form = ResetPasswordForm(request.POST)
+        if form.is_valid():
+            user = reset_token.user
+            user.set_password(form.cleaned_data['new_password'])
+            user.save()
+            reset_token.used = True
+            reset_token.save()
+            messages.success(request, "Your password has been reset successfully. You can now log in.")
+            return redirect('accounts:login')
+    else:
+        form = ResetPasswordForm()
+
+    return render(request, 'accounts/reset_password.html', {'form': form})
