@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMultiAlternatives
 from django.urls import reverse
 from django.conf import settings
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -46,17 +46,19 @@ def register(request):
 
         if form.is_valid():
 
-            # Create inactive user
-            user = form.save(commit=False)
+            # Create the user
+            user = form.save()
+
+            # User must verify email before login
             user.is_active = False
-            user.save()
+            user.save(update_fields=["is_active"])
 
             # Create activation token
             activation_token = ActivationToken.objects.create(
                 user=user
             )
 
-            # Create verification URL
+            # Create activation URL
             activation_url = request.build_absolute_uri(
                 reverse(
                     "accounts:activate",
@@ -69,7 +71,7 @@ def register(request):
             # Email subject
             subject = "Verify your CrowdFund Egypt account"
 
-            # Email body
+            # Plain-text version
             message = (
                 f"Hello {user.first_name},\n\n"
                 f"Thank you for registering on CrowdFund Egypt.\n\n"
@@ -83,45 +85,170 @@ def register(request):
                 f"CrowdFund Egypt Team"
             )
 
+            # HTML version
+            html_message = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Verify Your Email</title>
+</head>
+
+<body style="
+    margin: 0;
+    padding: 30px;
+    background-color: #f5f7fa;
+    font-family: Arial, Helvetica, sans-serif;
+">
+
+    <div style="
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        padding: 40px;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    ">
+
+        <h1 style="
+            margin-bottom: 10px;
+            color: #1f2937;
+        ">
+            CrowdFund Egypt
+        </h1>
+
+        <h2 style="
+            margin-top: 20px;
+            color: #374151;
+        ">
+            Verify Your Email
+        </h2>
+
+        <p style="
+            font-size: 16px;
+            color: #4b5563;
+            line-height: 1.6;
+        ">
+            Hello {user.first_name},
+        </p>
+
+        <p style="
+            font-size: 16px;
+            color: #4b5563;
+            line-height: 1.6;
+        ">
+            Thank you for registering on
+            <strong>CrowdFund Egypt</strong>.
+        </p>
+
+        <p style="
+            font-size: 16px;
+            color: #4b5563;
+            line-height: 1.6;
+        ">
+            Please click the button below to verify your email
+            address and activate your account.
+        </p>
+
+        <div style="margin: 30px 0;">
+
+            <a href="{activation_url}"
+               style="
+                    display: inline-block;
+                    padding: 14px 30px;
+                    background-color: #2563eb;
+                    color: #ffffff;
+                    text-decoration: none;
+                    border-radius: 7px;
+                    font-size: 16px;
+                    font-weight: bold;
+               ">
+                Verify My Email
+            </a>
+
+        </div>
+
+        <p style="
+            font-size: 14px;
+            color: #6b7280;
+            line-height: 1.5;
+        ">
+            This verification link will expire in
+            <strong>24 hours</strong>.
+        </p>
+
+        <p style="
+            font-size: 13px;
+            color: #9ca3af;
+            line-height: 1.5;
+            margin-top: 25px;
+        ">
+            If you did not create this account,
+            you can safely ignore this email.
+        </p>
+
+        <hr style="
+            border: none;
+            border-top: 1px solid #e5e7eb;
+            margin: 30px 0;
+        ">
+
+        <p style="
+            font-size: 14px;
+            color: #6b7280;
+        ">
+            Best regards,<br>
+            <strong>CrowdFund Egypt Team</strong>
+        </p>
+
+    </div>
+
+</body>
+</html>
+"""
+
             try:
 
-                send_mail(
-                    subject,
-                    message,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [user.email],
+                # Create email with both plain-text and HTML versions
+                email = EmailMultiAlternatives(
+                    subject=subject,
+                    body=message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[user.email],
+                )
+
+                # Attach HTML version
+                email.attach_alternative(
+                    html_message,
+                    "text/html"
+                )
+
+                # Send email
+                email.send(
                     fail_silently=False
+                )
+
+                messages.success(
+                    request,
+                    "Registration successful! "
+                    "Please check your email and verify your account "
+                    "before logging in."
                 )
 
             except Exception as e:
 
-                # Delete token and user if email cannot be sent
-                activation_token.delete()
-                user.delete()
-
+                # Print the actual error in the terminal
                 print("EMAIL ERROR:", e)
+
+                # Remove user if email could not be sent
+                user.delete()
 
                 messages.error(
                     request,
                     "Could not send the verification email. "
                     "Please try again later."
                 )
-
-                return render(
-                    request,
-                    "accounts/register.html",
-                    {
-                        "form": form
-                    }
-                )
-
-            # Email sent successfully
-            messages.success(
-                request,
-                "Registration successful! "
-                "Please check your email and verify your account "
-                "before logging in."
-            )
 
             return redirect("accounts:login")
 
@@ -170,21 +297,21 @@ def activate(request, token):
         messages.error(
             request,
             "This verification link has expired. "
-            "Please register again."
+            "Please register again or request a new verification link."
         )
 
         activation_token.delete()
 
         return redirect("accounts:login")
 
-    # Get user
+    # Get the user
     user = activation_token.user
 
     # Activate account
     user.is_active = True
     user.save(update_fields=["is_active"])
 
-    # Delete used token
+    # Token is no longer needed
     activation_token.delete()
 
     messages.success(
@@ -218,7 +345,7 @@ def login_view(request):
 
             user = form.user
 
-            # User exists but has not verified email
+            # Check email verification
             if not user.is_active:
 
                 messages.warning(
@@ -234,7 +361,7 @@ def login_view(request):
                     }
                 )
 
-            # Login verified user
+            # Login user
             login(
                 request,
                 user,
@@ -246,7 +373,7 @@ def login_view(request):
                 f"Welcome back, {user.first_name}!"
             )
 
-            # Handle ?next=
+            # Handle ?next=...
             next_url = request.GET.get("next")
 
             if next_url and url_has_allowed_host_and_scheme(
@@ -275,6 +402,9 @@ def login_view(request):
 # ============================================================
 
 def logout_view(request):
+    """
+    User logout view.
+    """
 
     logout(request)
 
@@ -292,6 +422,10 @@ def logout_view(request):
 
 @login_required
 def profile_view(request):
+    """
+    Displays user profile details,
+    created projects, and donation history.
+    """
 
     user = request.user
 
@@ -326,6 +460,9 @@ def profile_view(request):
 
 @login_required
 def edit_profile(request):
+    """
+    Edit user profile.
+    """
 
     if request.method == "POST":
 
@@ -367,6 +504,9 @@ def edit_profile(request):
 
 @login_required
 def delete_account(request):
+    """
+    Deletes the user account after password verification.
+    """
 
     if request.method == "POST":
 
@@ -410,10 +550,15 @@ def delete_account(request):
 # ============================================================
 
 def forgot_password(request):
+    """
+    Sends a password reset link to the user's email.
+    """
 
     if request.method == "POST":
 
-        form = ForgotPasswordForm(request.POST)
+        form = ForgotPasswordForm(
+            request.POST
+        )
 
         if form.is_valid():
 
@@ -473,7 +618,7 @@ def forgot_password(request):
                 messages.warning(
                     request,
                     "Could not send the email. "
-                    "Please check your email configuration."
+                    "Please contact support or check your email configuration."
                 )
 
             return redirect("accounts:login")
@@ -496,6 +641,9 @@ def forgot_password(request):
 # ============================================================
 
 def reset_password(request, token):
+    """
+    Reset password after validating the reset token.
+    """
 
     try:
 
@@ -531,7 +679,9 @@ def reset_password(request, token):
 
     if request.method == "POST":
 
-        form = ResetPasswordForm(request.POST)
+        form = ResetPasswordForm(
+            request.POST
+        )
 
         if form.is_valid():
 
