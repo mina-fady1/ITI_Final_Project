@@ -18,15 +18,20 @@ from .forms import (
 
 from .models import ActivationToken, PasswordResetToken
 
+
 User = get_user_model()
 
 
+# ============================================================
+# REGISTER
+# ============================================================
+
 def register(request):
     """
-    User registration view.
+    Register a new user.
 
-    New accounts are activated automatically.
-    No activation email is required.
+    New accounts are inactive until the user verifies
+    their email address.
     """
 
     if request.user.is_authenticated:
@@ -41,16 +46,87 @@ def register(request):
 
         if form.is_valid():
 
-            user = form.save()
+            # Create inactive user
+            user = form.save(commit=False)
+            user.is_active = False
+            user.save()
 
+            # Create activation token
+            activation_token = ActivationToken.objects.create(
+                user=user
+            )
+
+            # Create verification URL
+            activation_url = request.build_absolute_uri(
+                reverse(
+                    "accounts:activate",
+                    kwargs={
+                        "token": activation_token.token
+                    }
+                )
+            )
+
+            # Email subject
+            subject = "Verify your CrowdFund Egypt account"
+
+            # Email body
+            message = (
+                f"Hello {user.first_name},\n\n"
+                f"Thank you for registering on CrowdFund Egypt.\n\n"
+                f"Please click the link below to verify your email "
+                f"address and activate your account:\n\n"
+                f"{activation_url}\n\n"
+                f"This verification link will expire in 24 hours.\n\n"
+                f"If you did not create this account, you can ignore "
+                f"this email.\n\n"
+                f"Best regards,\n"
+                f"CrowdFund Egypt Team"
+            )
+
+            try:
+
+                send_mail(
+                    subject,
+                    message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [user.email],
+                    fail_silently=False
+                )
+
+            except Exception as e:
+
+                # Delete token and user if email cannot be sent
+                activation_token.delete()
+                user.delete()
+
+                print("EMAIL ERROR:", e)
+
+                messages.error(
+                    request,
+                    "Could not send the verification email. "
+                    "Please try again later."
+                )
+
+                return render(
+                    request,
+                    "accounts/register.html",
+                    {
+                        "form": form
+                    }
+                )
+
+            # Email sent successfully
             messages.success(
                 request,
-                "Registration successful! You can now log in."
+                "Registration successful! "
+                "Please check your email and verify your account "
+                "before logging in."
             )
 
             return redirect("accounts:login")
 
     else:
+
         form = RegistrationForm()
 
     return render(
@@ -62,15 +138,13 @@ def register(request):
     )
 
 
+# ============================================================
+# EMAIL ACTIVATION
+# ============================================================
+
 def activate(request, token):
     """
-    Legacy activation view.
-
-    New accounts no longer need this because they are
-    activated automatically during registration.
-
-    This function is kept so existing activation URLs
-    do not cause errors.
+    Activate a user account using the verification token.
     """
 
     try:
@@ -85,39 +159,53 @@ def activate(request, token):
 
         messages.error(
             request,
-            "Invalid activation token."
+            "Invalid or expired verification link."
         )
 
         return redirect("accounts:login")
 
+    # Check token expiration
     if not activation_token.is_valid():
 
         messages.error(
             request,
-            "This activation link has expired."
+            "This verification link has expired. "
+            "Please register again."
         )
 
         activation_token.delete()
 
         return redirect("accounts:login")
 
+    # Get user
     user = activation_token.user
 
+    # Activate account
     user.is_active = True
-    user.save()
+    user.save(update_fields=["is_active"])
 
+    # Delete used token
     activation_token.delete()
 
     messages.success(
         request,
-        "Your account has been activated successfully!"
+        "Your email has been verified successfully! "
+        "You can now log in."
     )
 
     return redirect("accounts:login")
 
 
+# ============================================================
+# LOGIN
+# ============================================================
+
 def login_view(request):
-    """User login view."""
+    """
+    User login view.
+
+    Users cannot log in until their email has been verified.
+    """
 
     if request.user.is_authenticated:
         return redirect("core:home")
@@ -130,8 +218,23 @@ def login_view(request):
 
             user = form.user
 
-            # Explicit backend because the project has
-            # multiple authentication backends configured.
+            # User exists but has not verified email
+            if not user.is_active:
+
+                messages.warning(
+                    request,
+                    "Please verify your email before logging in."
+                )
+
+                return render(
+                    request,
+                    "accounts/login.html",
+                    {
+                        "form": form
+                    }
+                )
+
+            # Login verified user
             login(
                 request,
                 user,
@@ -143,7 +246,9 @@ def login_view(request):
                 f"Welcome back, {user.first_name}!"
             )
 
+            # Handle ?next=
             next_url = request.GET.get("next")
+
             if next_url and url_has_allowed_host_and_scheme(
                 url=next_url,
                 allowed_hosts={request.get_host()}
@@ -153,6 +258,7 @@ def login_view(request):
             return redirect("core:home")
 
     else:
+
         form = LoginForm()
 
     return render(
@@ -164,8 +270,11 @@ def login_view(request):
     )
 
 
+# ============================================================
+# LOGOUT
+# ============================================================
+
 def logout_view(request):
-    """User logout view."""
 
     logout(request)
 
@@ -177,9 +286,12 @@ def logout_view(request):
     return redirect("core:home")
 
 
+# ============================================================
+# PROFILE
+# ============================================================
+
 @login_required
 def profile_view(request):
-    """Displays user profile details, created projects, and donation history."""
 
     user = request.user
 
@@ -208,9 +320,12 @@ def profile_view(request):
     )
 
 
+# ============================================================
+# EDIT PROFILE
+# ============================================================
+
 @login_required
 def edit_profile(request):
-    """Edits user profile."""
 
     if request.method == "POST":
 
@@ -246,9 +361,12 @@ def edit_profile(request):
     )
 
 
+# ============================================================
+# DELETE ACCOUNT
+# ============================================================
+
 @login_required
 def delete_account(request):
-    """Deletes user account after password verification."""
 
     if request.method == "POST":
 
@@ -262,6 +380,7 @@ def delete_account(request):
             user = request.user
 
             logout(request)
+
             user.delete()
 
             messages.info(
@@ -286,14 +405,15 @@ def delete_account(request):
     )
 
 
+# ============================================================
+# FORGOT PASSWORD
+# ============================================================
+
 def forgot_password(request):
-    """Requests a password reset link to be sent via email."""
 
     if request.method == "POST":
 
-        form = ForgotPasswordForm(
-            request.POST
-        )
+        form = ForgotPasswordForm(request.POST)
 
         if form.is_valid():
 
@@ -303,10 +423,12 @@ def forgot_password(request):
                 email__iexact=email
             )
 
+            # Create reset token
             token = PasswordResetToken.objects.create(
                 user=user
             )
 
+            # Create reset URL
             reset_url = request.build_absolute_uri(
                 reverse(
                     "accounts:reset_password",
@@ -320,11 +442,11 @@ def forgot_password(request):
 
             message = (
                 f"Hello {user.first_name},\n\n"
-                f"We received a request to reset your password.\n"
+                f"We received a request to reset your password.\n\n"
                 f"Click the link below to set a new password:\n\n"
                 f"{reset_url}\n\n"
-                f"Note: This link will expire in 1 hour. "
-                f"If you didn't request this, ignore this email.\n\n"
+                f"This link will expire in 1 hour.\n\n"
+                f"If you didn't request this, please ignore this email.\n\n"
                 f"Best regards,\n"
                 f"CrowdFund Egypt Team"
             )
@@ -344,12 +466,14 @@ def forgot_password(request):
                     "A password reset link has been sent to your email."
                 )
 
-            except Exception:
+            except Exception as e:
+
+                print("PASSWORD RESET EMAIL ERROR:", e)
 
                 messages.warning(
                     request,
                     "Could not send the email. "
-                    "Please contact support or check console logs."
+                    "Please check your email configuration."
                 )
 
             return redirect("accounts:login")
@@ -367,8 +491,11 @@ def forgot_password(request):
     )
 
 
+# ============================================================
+# RESET PASSWORD
+# ============================================================
+
 def reset_password(request, token):
-    """Sets a new password after validating the reset token."""
 
     try:
 
@@ -389,6 +516,7 @@ def reset_password(request, token):
             "accounts:forgot_password"
         )
 
+    # Check token validity
     if not reset_token.is_valid():
 
         messages.error(
@@ -403,9 +531,7 @@ def reset_password(request, token):
 
     if request.method == "POST":
 
-        form = ResetPasswordForm(
-            request.POST
-        )
+        form = ResetPasswordForm(request.POST)
 
         if form.is_valid():
 
@@ -417,8 +543,12 @@ def reset_password(request, token):
 
             user.save()
 
+            # Mark token as used
             reset_token.used = True
-            reset_token.save()
+
+            reset_token.save(
+                update_fields=["used"]
+            )
 
             messages.success(
                 request,
