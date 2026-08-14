@@ -4,109 +4,132 @@
     <!-- Chatbot Toggle Button -->
     <button
         id="chatbot-toggle-btn"
+        type="button"
         class="btn btn-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center position-relative"
-        style="width: 60px; height: 60px; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);"
-        aria-label="Open Chatbot">
+        style="width: 62px; height: 62px; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;"
+        aria-label="Open Chatbot"
+        title="Chat with CrowdFund AI">
         
-        <i id="chatbot-toggle-icon" class="fa-solid fa-wand-magic-sparkles fs-4"></i>
+        <i id="chatbot-toggle-icon" class="fa-solid fa-wand-magic-sparkles fs-4 text-white"></i>
         
         <!-- Pulse Indicator Badge -->
-        <span class="position-absolute top-0 start-100 translate-middle p-2 bg-success border border-light rounded-circle">
+        <span class="position-absolute top-0 start-100 translate-middle p-2 bg-success border border-light rounded-circle shadow-sm" title="AI Online">
             <span class="visually-hidden">AI Online</span>
         </span>
     </button>
 
-    <!-- Chatbot Window -->
+    <!-- Chatbot Window Card -->
     <div
         id="chatbot-window"
         class="card shadow-lg border-0 d-none overflow-hidden"
-        style="width: 370px; max-width: 90vw; height: 530px; max-height: 80vh; border-radius: 1.25rem; transition: all 0.3s ease;">
+        style="width: 385px; max-width: calc(100vw - 24px); height: 560px; max-height: min(600px, 82vh); border-radius: 1.25rem; transition: opacity 0.25s ease, transform 0.25s ease; box-shadow: 0 15px 35px rgba(15, 23, 42, 0.2) !important;">
         
         <!-- Header -->
-        <div class="card-header bg-gradient text-white d-flex align-items-center justify-content-between p-3 border-0"
+        <div class="card-header bg-gradient text-white d-flex align-items-center justify-content-between px-3 py-2.5 border-0"
              style="background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);">
             
             <div class="d-flex align-items-center gap-2">
-                <div class="bg-white text-primary rounded-circle p-2 d-flex align-items-center justify-content-center shadow-sm" style="width: 38px; height: 38px;">
-                    <i class="fa-solid fa-robot text-primary fs-5"></i>
+                <div class="bg-white text-primary rounded-circle p-2 d-flex align-items-center justify-content-center shadow-sm" style="width: 36px; height: 36px;">
+                    <i class="fa-solid fa-robot text-primary fs-6"></i>
                 </div>
                 <div>
-                    <h6 class="mb-0 fw-bold text-white small">CrowdFund AI</h6>
-                    <small class="text-white-50 d-flex align-items-center gap-1" style="font-size: 0.75rem;">
-                        <span class="d-inline-block bg-success rounded-circle" style="width: 6px; height: 6px;"></span>
-                        Powered by Gemini AI
+                    <h6 class="mb-0 fw-bold text-white small d-flex align-items-center gap-1.5">
+                        CrowdFund AI
+                        <span class="badge bg-success-subtle text-success border border-success-subtle px-1.5 py-0.5 rounded-pill" style="font-size: 0.65rem;">Online</span>
+                    </h6>
+                    <small class="text-white-50 d-flex align-items-center gap-1" style="font-size: 0.72rem;">
+                        <i class="fa-solid fa-bolt text-warning" style="font-size: 0.65rem;"></i>
+                        Live Project Assistant
                     </small>
                 </div>
             </div>
 
             <div class="d-flex align-items-center gap-1">
-                <button id="chatbot-clear-btn" class="btn btn-link text-white-50 p-1 text-decoration-none" title="Clear chat">
-                    <i class="fa-solid fa-rotate-right small"></i>
+                <button id="chatbot-clear-btn" type="button" class="btn btn-sm btn-link text-white-50 p-1 text-decoration-none header-action-btn" title="Reset conversation" aria-label="Clear chat">
+                    <i class="fa-solid fa-rotate-right" style="font-size: 0.85rem;"></i>
                 </button>
-                <button id="chatbot-close-btn" class="btn btn-link text-white p-1 text-decoration-none fs-5" aria-label="Close Chat">
-                    <i class="fa-solid fa-xmark"></i>
+                <button id="chatbot-close-btn" type="button" class="btn btn-sm btn-link text-white p-1 text-decoration-none header-action-btn" aria-label="Close Chat" title="Close (Esc)">
+                    <i class="fa-solid fa-xmark fs-5"></i>
                 </button>
             </div>
         </div>
 
         <!-- Chat Messages Area -->
-        <div id="chatbot-messages" class="card-body overflow-auto p-3 d-flex flex-column gap-3" style="background-color: #f8fafc; font-size: 0.9rem;">
+        <div id="chatbot-messages" class="card-body overflow-auto p-3 d-flex flex-column gap-3" style="background-color: #f8fafc; font-size: 0.875rem;">
             
-            <!-- Welcome Bot Message -->
-            <div class="d-flex align-items-start gap-2">
-                <div class="bg-primary text-white rounded-circle p-1 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px; font-size: 0.75rem;">
+            <!-- Default Welcome Bot Message -->
+            <div class="d-flex align-items-start gap-2 message-row bot-row">
+                <div class="bg-primary text-white rounded-circle p-1 d-flex align-items-center justify-content-center flex-shrink-0 mt-1 shadow-sm" style="width: 28px; height: 28px; font-size: 0.75rem;">
                     <i class="fa-solid fa-robot"></i>
                 </div>
-                <div class="bg-white p-3 rounded-4 shadow-sm border border-light" style="max-width: 85%;">
-                    <p class="mb-1 text-dark">
-                        👋 Hello! Welcome to <strong>CrowdFund Egypt</strong>!
+                <div class="bot-msg-bubble p-3 shadow-sm border border-light-subtle rounded-4 bg-white" style="max-width: 86%;">
+                    <p class="mb-1 text-dark fw-medium">
+                        👋 Welcome to <strong>CrowdFund Egypt</strong>!
                     </p>
-                    <p class="mb-0 text-muted" style="font-size: 0.825rem;">
-                        How can I help you today? Feel free to ask about starting campaigns, making donations, or exploring projects.
+                    <p class="mb-2 text-muted" style="font-size: 0.825rem; line-height: 1.45;">
+                        I am your smart platform assistant. Ask me anything about active campaigns, making donations in EGP, starting your own project, or platform policies!
                     </p>
+                    <div class="d-flex align-items-center justify-content-between pt-1 border-top border-light-subtle" style="font-size: 0.7rem; color: #94a3b8;">
+                        <span>CrowdFund AI</span>
+                        <span class="msg-time">Just now</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Quick Suggestions -->
-            <div id="chatbot-suggestions" class="d-flex flex-wrap gap-1 ms-4 ps-1">
-                <button class="btn btn-outline-secondary btn-sm rounded-pill px-2 py-1 suggestion-btn" style="font-size: 0.75rem;">
-                    🚀 How to start a campaign?
+            <!-- Initial Quick Suggestion Chips -->
+            <div id="chatbot-suggestions" class="d-flex flex-wrap gap-1 ms-4 ps-1 mt-1">
+                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-2.5 py-1 suggestion-btn" data-query="How do I start a new campaign?">
+                    🚀 Start Campaign
                 </button>
-                <button class="btn btn-outline-secondary btn-sm rounded-pill px-2 py-1 suggestion-btn" style="font-size: 0.75rem;">
-                    💰 How do donations work?
+                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-2.5 py-1 suggestion-btn" data-query="How do donations work?">
+                    💰 How to Donate
                 </button>
-                <button class="btn btn-outline-secondary btn-sm rounded-pill px-2 py-1 suggestion-btn" style="font-size: 0.75rem;">
-                    🎯 Explore top projects
+                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-2.5 py-1 suggestion-btn" data-query="What is the 25% project cancellation rule?">
+                    📋 Cancellation Policy
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-2.5 py-1 suggestion-btn" data-query="Show me active running projects">
+                    🎯 Active Projects
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-2.5 py-1 suggestion-btn" data-query="What are the platform statistics?">
+                    📊 Platform Stats
                 </button>
             </div>
 
         </div>
 
         <!-- Typing Indicator (Hidden by default) -->
-        <div id="chatbot-typing" class="px-3 py-1 bg-light d-none align-items-center gap-2 border-top" style="font-size: 0.8rem; color: #64748b;">
-            <div class="spinner-grow spinner-grow-sm text-primary" style="width: 0.5rem; height: 0.5rem;" role="status"></div>
-            <div class="spinner-grow spinner-grow-sm text-primary" style="width: 0.5rem; height: 0.5rem; animation-delay: 0.2s;" role="status"></div>
-            <div class="spinner-grow spinner-grow-sm text-primary" style="width: 0.5rem; height: 0.5rem; animation-delay: 0.4s;" role="status"></div>
-            <span>CrowdFund AI is thinking...</span>
+        <div id="chatbot-typing" class="px-3 py-2 bg-light d-none align-items-center gap-2 border-top" style="font-size: 0.8rem; color: #64748b;">
+            <div class="typing-dots d-flex align-items-center gap-1">
+                <span class="dot bg-primary rounded-circle"></span>
+                <span class="dot bg-primary rounded-circle"></span>
+                <span class="dot bg-primary rounded-circle"></span>
+            </div>
+            <span class="fw-medium">CrowdFund AI is thinking...</span>
         </div>
 
         <!-- Input Area -->
-        <div class="card-footer bg-white p-2 border-top">
-            <form id="chatbot-form" class="d-flex align-items-center gap-2">
+        <div class="card-footer bg-white p-2.5 border-top">
+            <form id="chatbot-form" class="d-flex align-items-center gap-2 m-0" action="javascript:void(0);" method="POST">
                 {% csrf_token %}
-                <input
-                    id="chatbot-input"
-                    type="text"
-                    class="form-control form-control-sm rounded-pill border-1 px-3 py-2"
-                    placeholder="Type your message..."
-                    autocomplete="off"
-                    required>
+                <div class="position-relative flex-grow-1">
+                    <input
+                        id="chatbot-input"
+                        type="text"
+                        class="form-control form-control-sm rounded-pill border-1 px-3 py-2"
+                        style="font-size: 0.875rem; padding-right: 2.25rem;"
+                        placeholder="Ask about projects, donations, rules..."
+                        autocomplete="off"
+                        maxlength="1000"
+                        required>
+                </div>
                 
                 <button
                     id="chatbot-send-btn"
                     type="submit"
-                    class="btn btn-primary rounded-circle d-flex align-items-center justify-content-center p-0 flex-shrink-0"
-                    style="width: 38px; height: 38px;">
+                    class="btn btn-primary rounded-circle d-flex align-items-center justify-content-center p-0 flex-shrink-0 shadow-sm"
+                    style="width: 38px; height: 38px; transition: transform 0.15s ease;"
+                    aria-label="Send message"
+                    title="Send (Enter)">
                     <i class="fa-solid fa-paper-plane text-white" style="font-size: 0.85rem;"></i>
                 </button>
             </form>
@@ -115,41 +138,117 @@
     </div>
 </div>
 
-<!-- Chatbot Styles & Animation -->
+<!-- Chatbot Styles & Micro-Animations -->
 <style>
     #chatbot-toggle-btn:hover {
         transform: scale(1.08) !important;
-        box-shadow: 0 10px 25px rgba(13, 148, 136, 0.4) !important;
+        box-shadow: 0 10px 25px rgba(13, 148, 136, 0.45) !important;
+    }
+
+    .header-action-btn {
+        opacity: 0.85;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+    .header-action-btn:hover {
+        opacity: 1;
+        transform: scale(1.1);
     }
 
     .user-msg-bubble {
         background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
         color: #ffffff;
-        border-radius: 1rem 1rem 0.25rem 1rem;
-        max-width: 82%;
+        border-radius: 1.15rem 1.15rem 0.25rem 1.15rem;
+        max-width: 84%;
         font-size: 0.875rem;
+        line-height: 1.45;
+        word-break: break-word;
     }
 
     .bot-msg-bubble {
         background-color: #ffffff;
         color: #1e293b;
-        border-radius: 1rem 1rem 1rem 0.25rem;
-        max-width: 85%;
+        border-radius: 1.15rem 1.15rem 1.15rem 0.25rem;
+        max-width: 86%;
         font-size: 0.875rem;
+        line-height: 1.45;
+        word-break: break-word;
+    }
+
+    .bot-msg-bubble a.chat-link {
+        color: #0d9488;
+        font-weight: 600;
+        text-decoration: none;
+        background-color: #f0fdfa;
+        border: 1px solid #ccfbf1;
+        padding: 2px 6px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        transition: all 0.2s ease;
+        margin: 2px 0;
+    }
+    .bot-msg-bubble a.chat-link:hover {
+        background-color: #0d9488;
+        color: #ffffff;
+        border-color: #0d9488;
+        text-decoration: none;
+    }
+
+    .bot-msg-bubble ul, .bot-msg-bubble ol {
+        margin-bottom: 0.5rem;
+        padding-left: 1.25rem;
+    }
+    .bot-msg-bubble li {
+        margin-bottom: 0.25rem;
     }
 
     .suggestion-btn {
-        transition: all 0.2s ease;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        border-color: #cbd5e1;
+        color: #475569;
+        font-size: 0.75rem;
+        background-color: #ffffff;
     }
-
     .suggestion-btn:hover {
         background-color: #0d9488;
         color: #ffffff;
         border-color: #0d9488;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(13, 148, 136, 0.25);
+    }
+
+    /* Typing Dots Animation */
+    .typing-dots .dot {
+        width: 6px;
+        height: 6px;
+        display: inline-block;
+        animation: typingBlink 1.4s infinite ease-in-out both;
+    }
+    .typing-dots .dot:nth-child(1) { animation-delay: -0.32s; }
+    .typing-dots .dot:nth-child(2) { animation-delay: -0.16s; }
+    .typing-dots .dot:nth-child(3) { animation-delay: 0s; }
+
+    @keyframes typingBlink {
+        0%, 80%, 100% { transform: scale(0); opacity: 0.4; }
+        40% { transform: scale(1); opacity: 1; }
+    }
+
+    .msg-action-btn {
+        background: transparent;
+        border: none;
+        color: #94a3b8;
+        padding: 0 4px;
+        font-size: 0.72rem;
+        cursor: pointer;
+        transition: color 0.15s ease;
+    }
+    .msg-action-btn:hover {
+        color: #0d9488;
     }
 </style>
 
-<!-- Chatbot Script -->
+<!-- Chatbot Enhanced Script -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const toggleBtn = document.getElementById('chatbot-toggle-btn');
@@ -161,145 +260,355 @@ document.addEventListener('DOMContentLoaded', function() {
     const inputEl = document.getElementById('chatbot-input');
     const messagesEl = document.getElementById('chatbot-messages');
     const typingEl = document.getElementById('chatbot-typing');
-    const suggestionsEl = document.getElementById('chatbot-suggestions');
+
+    const STORAGE_KEY_HISTORY = 'crowdfund_chatbot_history_v2';
+    const STORAGE_KEY_STATE = 'crowdfund_chatbot_open_state';
 
     let chatHistory = [];
+    let isSubmitting = false;
 
-    // Toggle Chatbot window
-    toggleBtn.addEventListener('click', function() {
-        const isHidden = windowEl.classList.contains('d-none');
-        if (isHidden) {
-            windowEl.classList.remove('d-none');
-            toggleIcon.className = 'fa-solid fa-xmark fs-4';
-            inputEl.focus();
-        } else {
-            windowEl.classList.add('d-none');
-            toggleIcon.className = 'fa-solid fa-wand-magic-sparkles fs-4';
-        }
-    });
-
-    closeBtn.addEventListener('click', function() {
-        windowEl.classList.add('d-none');
-        toggleIcon.className = 'fa-solid fa-wand-magic-sparkles fs-4';
-    });
-
-    clearBtn.addEventListener('click', function() {
-        chatHistory = [];
-        messagesEl.innerHTML = `
-            <div class="d-flex align-items-start gap-2">
-                <div class="bg-primary text-white rounded-circle p-1 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px; font-size: 0.75rem;">
-                    <i class="fa-solid fa-robot"></i>
-                </div>
-                <div class="bg-white p-3 rounded-4 shadow-sm border border-light" style="max-width: 85%;">
-                    <p class="mb-1 text-dark">
-                        👋 Hello! Welcome to <strong>CrowdFund Egypt</strong>!
-                    </p>
-                    <p class="mb-0 text-muted" style="font-size: 0.825rem;">
-                        Chat reset! How can I help you?
-                    </p>
-                </div>
-            </div>
-            <div id="chatbot-suggestions" class="d-flex flex-wrap gap-1 ms-4 ps-1">
-                <button class="btn btn-outline-secondary btn-sm rounded-pill px-2 py-1 suggestion-btn" style="font-size: 0.75rem;">
-                    🚀 How to start a campaign?
-                </button>
-                <button class="btn btn-outline-secondary btn-sm rounded-pill px-2 py-1 suggestion-btn" style="font-size: 0.75rem;">
-                    💰 How do donations work?
-                </button>
-                <button class="btn btn-outline-secondary btn-sm rounded-pill px-2 py-1 suggestion-btn" style="font-size: 0.75rem;">
-                    🎯 Explore top projects
-                </button>
-            </div>
-        `;
-        bindSuggestions();
-    });
-
-    // Handle suggestion button clicks
-    function bindSuggestions() {
-        document.querySelectorAll('.suggestion-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const text = this.textContent.trim().replace(/^[\u{1F300}-\u{1F9FF}]\s*/u, '');
-                inputEl.value = text;
-                formEl.dispatchEvent(new Event('submit'));
-            });
-        });
+    // Helper: format current time (e.g. "2:30 PM")
+    function getCurrentTimeString() {
+        const now = new Date();
+        return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
-    bindSuggestions();
 
-    // Markdown simple formatter
+    // Helper: get CSRF token reliably
+    function getCsrfToken() {
+        const inputToken = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (inputToken && inputToken.value) return inputToken.value;
+        const cookie = document.cookie.split('; ').find(row => row.startsWith('csrftoken='));
+        return cookie ? cookie.split('=')[1] : '';
+    }
+
+    // Comprehensive Markdown Parser with Clickable Links and Lists
     function parseMarkdown(text) {
         if (!text) return '';
-        let escaped = text
+        
+        let formatted = text
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")
             .replace(/>/g, "&gt;");
 
-        // Format bold, italic, code, newlines
-        return escaped
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*(.*?)\*/g, '<em>$1</em>')
-            .replace(/`(.*?)`/g, '<code class="bg-light px-1 rounded text-primary">$1</code>')
-            .replace(/\n/g, '<br>');
+        // Code blocks: ```code```
+        formatted = formatted.replace(/```([\s\S]*?)```/g, '<pre class="bg-dark text-light p-2 rounded small my-1"><code>$1</code></pre>');
+
+        // Inline code: `code`
+        formatted = formatted.replace(/`([^`]+)`/g, '<code class="bg-light px-1 py-0.5 rounded text-primary border" style="font-size: 0.85em;">$1</code>');
+
+        // Headers: ### Title, ## Title, # Title
+        formatted = formatted.replace(/^### (.*$)/gim, '<h6 class="fw-bold mt-2 mb-1 text-dark">$1</h6>');
+        formatted = formatted.replace(/^## (.*$)/gim, '<h6 class="fw-bold mt-2 mb-1 text-dark">$1</h6>');
+        formatted = formatted.replace(/^# (.*$)/gim, '<h6 class="fw-bold mt-2 mb-1 text-dark">$1</h6>');
+
+        // Bold and Italic
+        formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        formatted = formatted.replace(/\*([^\*]+)\*/g, '<em>$1</em>');
+        formatted = formatted.replace(/_([^_]+)_/g, '<em>$1</em>');
+
+        // Markdown Links: [Title](URL) -> Styled Chat Link Badge
+        formatted = formatted.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function(match, linkText, url) {
+            return `<a href="${url}" class="chat-link" title="Open ${linkText}"><span>${linkText}</span> <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.65rem;"></i></a>`;
+        });
+
+        // Bullet lists
+        formatted = formatted.replace(/(?:^|\n)[•\-\*]\s+(.*)/g, '<li class="ms-2">$1</li>');
+        formatted = formatted.replace(/(<li.*<\/li>)/s, '<ul class="mb-1 ps-2">$1</ul>');
+
+        // Newlines
+        formatted = formatted.replace(/\n/g, '<br>');
+
+        return formatted;
     }
 
-    // Scroll chat to bottom
+    // Scroll chat to bottom smoothly
     function scrollToBottom() {
-        messagesEl.scrollTop = messagesEl.scrollHeight;
+        requestAnimationFrame(() => {
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        });
+    }
+
+    // Save history to sessionStorage
+    function saveHistoryToStorage() {
+        try {
+            sessionStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(chatHistory));
+        } catch (e) {
+            console.warn('Could not save chat history to storage', e);
+        }
     }
 
     // Append Message to UI
-    function appendMessage(sender, text) {
+    function appendMessage(sender, text, timestamp = null, save = true) {
         const isUser = sender === 'user';
+        const timeStr = timestamp || getCurrentTimeString();
         const msgDiv = document.createElement('div');
-        msgDiv.className = `d-flex align-items-start gap-2 ${isUser ? 'justify-content-end' : ''}`;
+        msgDiv.className = `d-flex align-items-start gap-2 message-row ${isUser ? 'justify-content-end user-row' : 'bot-row'}`;
 
         if (isUser) {
             msgDiv.innerHTML = `
                 <div class="user-msg-bubble p-3 shadow-sm">
-                    ${parseMarkdown(text)}
+                    <div>${parseMarkdown(text)}</div>
+                    <div class="text-end mt-1 text-white-50" style="font-size: 0.68rem;">
+                        <span>${timeStr}</span>
+                    </div>
                 </div>
             `;
         } else {
             msgDiv.innerHTML = `
-                <div class="bg-primary text-white rounded-circle p-1 d-flex align-items-center justify-content-center flex-shrink-0 mt-1" style="width: 28px; height: 28px; font-size: 0.75rem;">
+                <div class="bg-primary text-white rounded-circle p-1 d-flex align-items-center justify-content-center flex-shrink-0 mt-1 shadow-sm" style="width: 28px; height: 28px; font-size: 0.75rem;">
                     <i class="fa-solid fa-robot"></i>
                 </div>
-                <div class="bot-msg-bubble p-3 shadow-sm border border-light">
-                    ${parseMarkdown(text)}
+                <div class="bot-msg-bubble p-3 shadow-sm border border-light-subtle rounded-4 bg-white">
+                    <div class="bot-text-content">${parseMarkdown(text)}</div>
+                    <div class="d-flex align-items-center justify-content-between pt-1.5 mt-2 border-top border-light-subtle" style="font-size: 0.7rem; color: #94a3b8;">
+                        <span class="d-flex align-items-center gap-1">
+                            <span>CrowdFund AI</span>
+                            <button type="button" class="msg-action-btn copy-msg-btn" title="Copy response" aria-label="Copy response">
+                                <i class="fa-regular fa-copy"></i>
+                            </button>
+                            <button type="button" class="msg-action-btn speak-msg-btn" title="Listen to response" aria-label="Listen">
+                                <i class="fa-solid fa-volume-high"></i>
+                            </button>
+                        </span>
+                        <span class="msg-time">${timeStr}</span>
+                    </div>
                 </div>
             `;
+
+            // Attach copy event
+            const copyBtn = msgDiv.querySelector('.copy-msg-btn');
+            if (copyBtn) {
+                copyBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const rawText = text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+                    navigator.clipboard.writeText(rawText).then(() => {
+                        copyBtn.innerHTML = '<i class="fa-solid fa-check text-success"></i>';
+                        setTimeout(() => {
+                            copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i>';
+                        }, 2000);
+                    });
+                });
+            }
+
+            // Attach speech synthesis (TTS) event
+            const speakBtn = msgDiv.querySelector('.speak-msg-btn');
+            if (speakBtn && 'speechSynthesis' in window) {
+                speakBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (window.speechSynthesis.speaking) {
+                        window.speechSynthesis.cancel();
+                        speakBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i>';
+                        return;
+                    }
+                    const plainText = text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/[\*#`_]/g, '');
+                    const utterance = new SpeechSynthesisUtterance(plainText);
+                    utterance.rate = 1.0;
+                    utterance.onend = () => { speakBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i>'; };
+                    utterance.onerror = () => { speakBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i>'; };
+                    speakBtn.innerHTML = '<i class="fa-solid fa-stop text-danger"></i>';
+                    window.speechSynthesis.speak(utterance);
+                });
+            }
         }
 
         messagesEl.appendChild(msgDiv);
         scrollToBottom();
 
-        chatHistory.push({ sender: sender, text: text });
+        if (save) {
+            chatHistory.push({ sender: sender, text: text, time: timeStr });
+            saveHistoryToStorage();
+        }
     }
 
-    // Submit user message
-    formEl.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const message = inputEl.value.trim();
-        if (!message) return;
+    // Render follow-up dynamic suggestion chips
+    function renderFollowUpSuggestions(lastMessage = '') {
+        const oldSuggestions = document.getElementById('chatbot-suggestions');
+        if (oldSuggestions) oldSuggestions.remove();
 
-        // Hide suggestion chips after user starts chatting
+        const suggestionsContainer = document.createElement('div');
+        suggestionsContainer.id = 'chatbot-suggestions';
+        suggestionsContainer.className = 'd-flex flex-wrap gap-1 ms-4 ps-1 mt-1';
+
+        const chips = [
+            { label: '🚀 Start Campaign', query: 'How do I start a new campaign?' },
+            { label: '💰 How to Donate', query: 'How do donations work?' },
+            { label: '📋 25% Cancel Rule', query: 'Explain the 25% project cancellation rule' },
+            { label: '🎯 Browse Projects', query: 'Show me active projects' },
+            { label: '📊 Platform Stats', query: 'What are the platform statistics?' }
+        ];
+
+        chips.forEach(chip => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn btn-outline-secondary btn-sm rounded-pill px-2.5 py-1 suggestion-btn';
+            btn.textContent = chip.label;
+            btn.setAttribute('data-query', chip.query);
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                sendMessage(chip.query);
+            });
+            suggestionsContainer.appendChild(btn);
+        });
+
+        messagesEl.appendChild(suggestionsContainer);
+        scrollToBottom();
+    }
+
+    // Bind initial suggestion clicks
+    function bindSuggestions() {
+        document.querySelectorAll('.suggestion-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const query = this.getAttribute('data-query') || this.textContent.trim().replace(/^[\u{1F300}-\u{1F9FF}]\s*/u, '');
+                sendMessage(query);
+            });
+        });
+    }
+
+    // Restore conversation history from sessionStorage on load
+    function restoreChatSession() {
+        try {
+            const savedHistory = sessionStorage.getItem(STORAGE_KEY_HISTORY);
+            if (savedHistory) {
+                const parsed = JSON.parse(savedHistory);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    messagesEl.innerHTML = '';
+                    parsed.forEach(msg => {
+                        appendMessage(msg.sender, msg.text, msg.time, false);
+                    });
+                    chatHistory = parsed;
+                    renderFollowUpSuggestions();
+                } else {
+                    bindSuggestions();
+                }
+            } else {
+                bindSuggestions();
+            }
+
+            const isOpen = sessionStorage.getItem(STORAGE_KEY_STATE) === 'true';
+            if (isOpen) {
+                openChatWindow();
+            }
+        } catch (e) {
+            console.warn('Error restoring chat session:', e);
+            bindSuggestions();
+        }
+    }
+
+    function openChatWindow() {
+        windowEl.classList.remove('d-none');
+        toggleIcon.className = 'fa-solid fa-xmark fs-4 text-white';
+        sessionStorage.setItem(STORAGE_KEY_STATE, 'true');
+        setTimeout(() => inputEl.focus(), 150);
+        scrollToBottom();
+    }
+
+    function closeChatWindow() {
+        windowEl.classList.add('d-none');
+        toggleIcon.className = 'fa-solid fa-wand-magic-sparkles fs-4 text-white';
+        sessionStorage.setItem(STORAGE_KEY_STATE, 'false');
+    }
+
+    // Toggle Chatbot Window
+    toggleBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const isHidden = windowEl.classList.contains('d-none');
+        if (isHidden) {
+            openChatWindow();
+        } else {
+            closeChatWindow();
+        }
+    });
+
+    closeBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        closeChatWindow();
+    });
+
+    // Keyboard shortcut: Escape closes chatbot window
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !windowEl.classList.contains('d-none')) {
+            closeChatWindow();
+        }
+    });
+
+    // Clear Chat
+    clearBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (window.speechSynthesis && window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+        }
+        chatHistory = [];
+        sessionStorage.removeItem(STORAGE_KEY_HISTORY);
+        messagesEl.innerHTML = `
+            <div class="d-flex align-items-start gap-2 message-row bot-row">
+                <div class="bg-primary text-white rounded-circle p-1 d-flex align-items-center justify-content-center flex-shrink-0 mt-1 shadow-sm" style="width: 28px; height: 28px; font-size: 0.75rem;">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <div class="bot-msg-bubble p-3 shadow-sm border border-light-subtle rounded-4 bg-white" style="max-width: 86%;">
+                    <p class="mb-1 text-dark fw-medium">
+                        👋 Chat reset! Welcome to <strong>CrowdFund Egypt</strong>!
+                    </p>
+                    <p class="mb-2 text-muted" style="font-size: 0.825rem; line-height: 1.45;">
+                        How can I help you today? Ask me about projects, campaigns, or policies.
+                    </p>
+                    <div class="d-flex align-items-center justify-content-between pt-1 border-top border-light-subtle" style="font-size: 0.7rem; color: #94a3b8;">
+                        <span>CrowdFund AI</span>
+                        <span class="msg-time">${getCurrentTimeString()}</span>
+                    </div>
+                </div>
+            </div>
+            <div id="chatbot-suggestions" class="d-flex flex-wrap gap-1 ms-4 ps-1 mt-1">
+                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-2.5 py-1 suggestion-btn" data-query="How do I start a new campaign?">
+                    🚀 Start Campaign
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-2.5 py-1 suggestion-btn" data-query="How do donations work?">
+                    💰 How to Donate
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-2.5 py-1 suggestion-btn" data-query="What is the 25% project cancellation rule?">
+                    📋 Cancellation Policy
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-2.5 py-1 suggestion-btn" data-query="Show me active running projects">
+                    🎯 Active Projects
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-2.5 py-1 suggestion-btn" data-query="What are the platform statistics?">
+                    📊 Platform Stats
+                </button>
+            </div>
+        `;
+        bindSuggestions();
+        inputEl.focus();
+    });
+
+    // Core Send Message function
+    function sendMessage(customMessage = null) {
+        const message = (customMessage !== null ? customMessage : inputEl.value).trim();
+        if (!message || isSubmitting) return;
+
+        // Remove old suggestions
         const currentSuggestions = document.getElementById('chatbot-suggestions');
         if (currentSuggestions) {
             currentSuggestions.remove();
         }
 
+        // Snapshot current history before appending the new user message
+        const previousHistory = [...chatHistory];
+
+        // Append user message to UI and history
         appendMessage('user', message);
         inputEl.value = '';
+        isSubmitting = true;
 
         // Show typing indicator
         typingEl.classList.remove('d-none');
         typingEl.classList.add('d-flex');
         scrollToBottom();
 
-        // Get CSRF Token
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const csrfToken = getCsrfToken();
 
-        // Send AJAX POST request to Django Backend
+        // Dispatch AJAX POST request
         fetch("{% url 'core:chatbot' %}", {
             method: 'POST',
             headers: {
@@ -308,18 +617,27 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             body: JSON.stringify({
                 message: message,
-                history: chatHistory
+                history: previousHistory
             })
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok && response.status === 429) {
+                return response.json().then(errData => {
+                    throw new Error(errData.error || "Please wait a moment before sending another message.");
+                });
+            }
+            return response.json();
+        })
         .then(data => {
             typingEl.classList.add('d-none');
             typingEl.classList.remove('d-flex');
+            isSubmitting = false;
 
             if (data.response) {
                 appendMessage('bot', data.response);
+                renderFollowUpSuggestions(message);
             } else if (data.error) {
-                appendMessage('bot', `❌ Error: ${data.error}`);
+                appendMessage('bot', `⚠️ ${data.error}`);
             } else {
                 appendMessage('bot', "Sorry, I received an unexpected response. Please try again.");
             }
@@ -327,9 +645,21 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => {
             typingEl.classList.add('d-none');
             typingEl.classList.remove('d-flex');
-            appendMessage('bot', "⚠️ Connection error. Please check your internet connection.");
-            console.error('Chatbot error:', error);
+            isSubmitting = false;
+            appendMessage('bot', `⚠️ ${error.message || "Connection error. Please try again in a moment."}`);
+            console.error('Chatbot request error:', error);
         });
+    }
+
+    // Form Submit Handler
+    formEl.addEventListener('submit', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        sendMessage();
+        return false;
     });
+
+    // Initialize
+    restoreChatSession();
 });
 </script>
