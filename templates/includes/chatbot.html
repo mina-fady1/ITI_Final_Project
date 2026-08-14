@@ -1,0 +1,335 @@
+<!-- Floating Chatbot Widget -->
+<div id="chatbot-container" class="position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
+
+    <!-- Chatbot Toggle Button -->
+    <button
+        id="chatbot-toggle-btn"
+        class="btn btn-primary rounded-circle shadow-lg d-flex align-items-center justify-content-center position-relative"
+        style="width: 60px; height: 60px; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);"
+        aria-label="Open Chatbot">
+        
+        <i id="chatbot-toggle-icon" class="fa-solid fa-wand-magic-sparkles fs-4"></i>
+        
+        <!-- Pulse Indicator Badge -->
+        <span class="position-absolute top-0 start-100 translate-middle p-2 bg-success border border-light rounded-circle">
+            <span class="visually-hidden">AI Online</span>
+        </span>
+    </button>
+
+    <!-- Chatbot Window -->
+    <div
+        id="chatbot-window"
+        class="card shadow-lg border-0 d-none overflow-hidden"
+        style="width: 370px; max-width: 90vw; height: 530px; max-height: 80vh; border-radius: 1.25rem; transition: all 0.3s ease;">
+        
+        <!-- Header -->
+        <div class="card-header bg-gradient text-white d-flex align-items-center justify-content-between p-3 border-0"
+             style="background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);">
+            
+            <div class="d-flex align-items-center gap-2">
+                <div class="bg-white text-primary rounded-circle p-2 d-flex align-items-center justify-content-center shadow-sm" style="width: 38px; height: 38px;">
+                    <i class="fa-solid fa-robot text-primary fs-5"></i>
+                </div>
+                <div>
+                    <h6 class="mb-0 fw-bold text-white small">CrowdFund AI</h6>
+                    <small class="text-white-50 d-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                        <span class="d-inline-block bg-success rounded-circle" style="width: 6px; height: 6px;"></span>
+                        Powered by Gemini AI
+                    </small>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-1">
+                <button id="chatbot-clear-btn" class="btn btn-link text-white-50 p-1 text-decoration-none" title="Clear chat">
+                    <i class="fa-solid fa-rotate-right small"></i>
+                </button>
+                <button id="chatbot-close-btn" class="btn btn-link text-white p-1 text-decoration-none fs-5" aria-label="Close Chat">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Chat Messages Area -->
+        <div id="chatbot-messages" class="card-body overflow-auto p-3 d-flex flex-column gap-3" style="background-color: #f8fafc; font-size: 0.9rem;">
+            
+            <!-- Welcome Bot Message -->
+            <div class="d-flex align-items-start gap-2">
+                <div class="bg-primary text-white rounded-circle p-1 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px; font-size: 0.75rem;">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <div class="bg-white p-3 rounded-4 shadow-sm border border-light" style="max-width: 85%;">
+                    <p class="mb-1 text-dark">
+                        👋 Hello! Welcome to <strong>CrowdFund Egypt</strong>!
+                    </p>
+                    <p class="mb-0 text-muted" style="font-size: 0.825rem;">
+                        How can I help you today? Feel free to ask about starting campaigns, making donations, or exploring projects.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Quick Suggestions -->
+            <div id="chatbot-suggestions" class="d-flex flex-wrap gap-1 ms-4 ps-1">
+                <button class="btn btn-outline-secondary btn-sm rounded-pill px-2 py-1 suggestion-btn" style="font-size: 0.75rem;">
+                    🚀 How to start a campaign?
+                </button>
+                <button class="btn btn-outline-secondary btn-sm rounded-pill px-2 py-1 suggestion-btn" style="font-size: 0.75rem;">
+                    💰 How do donations work?
+                </button>
+                <button class="btn btn-outline-secondary btn-sm rounded-pill px-2 py-1 suggestion-btn" style="font-size: 0.75rem;">
+                    🎯 Explore top projects
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Typing Indicator (Hidden by default) -->
+        <div id="chatbot-typing" class="px-3 py-1 bg-light d-none align-items-center gap-2 border-top" style="font-size: 0.8rem; color: #64748b;">
+            <div class="spinner-grow spinner-grow-sm text-primary" style="width: 0.5rem; height: 0.5rem;" role="status"></div>
+            <div class="spinner-grow spinner-grow-sm text-primary" style="width: 0.5rem; height: 0.5rem; animation-delay: 0.2s;" role="status"></div>
+            <div class="spinner-grow spinner-grow-sm text-primary" style="width: 0.5rem; height: 0.5rem; animation-delay: 0.4s;" role="status"></div>
+            <span>CrowdFund AI is thinking...</span>
+        </div>
+
+        <!-- Input Area -->
+        <div class="card-footer bg-white p-2 border-top">
+            <form id="chatbot-form" class="d-flex align-items-center gap-2">
+                {% csrf_token %}
+                <input
+                    id="chatbot-input"
+                    type="text"
+                    class="form-control form-control-sm rounded-pill border-1 px-3 py-2"
+                    placeholder="Type your message..."
+                    autocomplete="off"
+                    required>
+                
+                <button
+                    id="chatbot-send-btn"
+                    type="submit"
+                    class="btn btn-primary rounded-circle d-flex align-items-center justify-content-center p-0 flex-shrink-0"
+                    style="width: 38px; height: 38px;">
+                    <i class="fa-solid fa-paper-plane text-white" style="font-size: 0.85rem;"></i>
+                </button>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<!-- Chatbot Styles & Animation -->
+<style>
+    #chatbot-toggle-btn:hover {
+        transform: scale(1.08) !important;
+        box-shadow: 0 10px 25px rgba(13, 148, 136, 0.4) !important;
+    }
+
+    .user-msg-bubble {
+        background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+        color: #ffffff;
+        border-radius: 1rem 1rem 0.25rem 1rem;
+        max-width: 82%;
+        font-size: 0.875rem;
+    }
+
+    .bot-msg-bubble {
+        background-color: #ffffff;
+        color: #1e293b;
+        border-radius: 1rem 1rem 1rem 0.25rem;
+        max-width: 85%;
+        font-size: 0.875rem;
+    }
+
+    .suggestion-btn {
+        transition: all 0.2s ease;
+    }
+
+    .suggestion-btn:hover {
+        background-color: #0d9488;
+        color: #ffffff;
+        border-color: #0d9488;
+    }
+</style>
+
+<!-- Chatbot Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const toggleBtn = document.getElementById('chatbot-toggle-btn');
+    const toggleIcon = document.getElementById('chatbot-toggle-icon');
+    const windowEl = document.getElementById('chatbot-window');
+    const closeBtn = document.getElementById('chatbot-close-btn');
+    const clearBtn = document.getElementById('chatbot-clear-btn');
+    const formEl = document.getElementById('chatbot-form');
+    const inputEl = document.getElementById('chatbot-input');
+    const messagesEl = document.getElementById('chatbot-messages');
+    const typingEl = document.getElementById('chatbot-typing');
+    const suggestionsEl = document.getElementById('chatbot-suggestions');
+
+    let chatHistory = [];
+
+    // Toggle Chatbot window
+    toggleBtn.addEventListener('click', function() {
+        const isHidden = windowEl.classList.contains('d-none');
+        if (isHidden) {
+            windowEl.classList.remove('d-none');
+            toggleIcon.className = 'fa-solid fa-xmark fs-4';
+            inputEl.focus();
+        } else {
+            windowEl.classList.add('d-none');
+            toggleIcon.className = 'fa-solid fa-wand-magic-sparkles fs-4';
+        }
+    });
+
+    closeBtn.addEventListener('click', function() {
+        windowEl.classList.add('d-none');
+        toggleIcon.className = 'fa-solid fa-wand-magic-sparkles fs-4';
+    });
+
+    clearBtn.addEventListener('click', function() {
+        chatHistory = [];
+        messagesEl.innerHTML = `
+            <div class="d-flex align-items-start gap-2">
+                <div class="bg-primary text-white rounded-circle p-1 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 28px; height: 28px; font-size: 0.75rem;">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <div class="bg-white p-3 rounded-4 shadow-sm border border-light" style="max-width: 85%;">
+                    <p class="mb-1 text-dark">
+                        👋 Hello! Welcome to <strong>CrowdFund Egypt</strong>!
+                    </p>
+                    <p class="mb-0 text-muted" style="font-size: 0.825rem;">
+                        Chat reset! How can I help you?
+                    </p>
+                </div>
+            </div>
+            <div id="chatbot-suggestions" class="d-flex flex-wrap gap-1 ms-4 ps-1">
+                <button class="btn btn-outline-secondary btn-sm rounded-pill px-2 py-1 suggestion-btn" style="font-size: 0.75rem;">
+                    🚀 How to start a campaign?
+                </button>
+                <button class="btn btn-outline-secondary btn-sm rounded-pill px-2 py-1 suggestion-btn" style="font-size: 0.75rem;">
+                    💰 How do donations work?
+                </button>
+                <button class="btn btn-outline-secondary btn-sm rounded-pill px-2 py-1 suggestion-btn" style="font-size: 0.75rem;">
+                    🎯 Explore top projects
+                </button>
+            </div>
+        `;
+        bindSuggestions();
+    });
+
+    // Handle suggestion button clicks
+    function bindSuggestions() {
+        document.querySelectorAll('.suggestion-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const text = this.textContent.trim().replace(/^[\u{1F300}-\u{1F9FF}]\s*/u, '');
+                inputEl.value = text;
+                formEl.dispatchEvent(new Event('submit'));
+            });
+        });
+    }
+    bindSuggestions();
+
+    // Markdown simple formatter
+    function parseMarkdown(text) {
+        if (!text) return '';
+        let escaped = text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+
+        // Format bold, italic, code, newlines
+        return escaped
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/`(.*?)`/g, '<code class="bg-light px-1 rounded text-primary">$1</code>')
+            .replace(/\n/g, '<br>');
+    }
+
+    // Scroll chat to bottom
+    function scrollToBottom() {
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    // Append Message to UI
+    function appendMessage(sender, text) {
+        const isUser = sender === 'user';
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `d-flex align-items-start gap-2 ${isUser ? 'justify-content-end' : ''}`;
+
+        if (isUser) {
+            msgDiv.innerHTML = `
+                <div class="user-msg-bubble p-3 shadow-sm">
+                    ${parseMarkdown(text)}
+                </div>
+            `;
+        } else {
+            msgDiv.innerHTML = `
+                <div class="bg-primary text-white rounded-circle p-1 d-flex align-items-center justify-content-center flex-shrink-0 mt-1" style="width: 28px; height: 28px; font-size: 0.75rem;">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <div class="bot-msg-bubble p-3 shadow-sm border border-light">
+                    ${parseMarkdown(text)}
+                </div>
+            `;
+        }
+
+        messagesEl.appendChild(msgDiv);
+        scrollToBottom();
+
+        chatHistory.push({ sender: sender, text: text });
+    }
+
+    // Submit user message
+    formEl.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const message = inputEl.value.trim();
+        if (!message) return;
+
+        // Hide suggestion chips after user starts chatting
+        const currentSuggestions = document.getElementById('chatbot-suggestions');
+        if (currentSuggestions) {
+            currentSuggestions.remove();
+        }
+
+        appendMessage('user', message);
+        inputEl.value = '';
+
+        // Show typing indicator
+        typingEl.classList.remove('d-none');
+        typingEl.classList.add('d-flex');
+        scrollToBottom();
+
+        // Get CSRF Token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        // Send AJAX POST request to Django Backend
+        fetch("{% url 'core:chatbot' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                message: message,
+                history: chatHistory
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            typingEl.classList.add('d-none');
+            typingEl.classList.remove('d-flex');
+
+            if (data.response) {
+                appendMessage('bot', data.response);
+            } else if (data.error) {
+                appendMessage('bot', `❌ Error: ${data.error}`);
+            } else {
+                appendMessage('bot', "Sorry, I received an unexpected response. Please try again.");
+            }
+        })
+        .catch(error => {
+            typingEl.classList.add('d-none');
+            typingEl.classList.remove('d-flex');
+            appendMessage('bot', "⚠️ Connection error. Please check your internet connection.");
+            console.error('Chatbot error:', error);
+        });
+    });
+});
+</script>
