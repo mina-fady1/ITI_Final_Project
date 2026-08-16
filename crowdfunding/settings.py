@@ -161,6 +161,9 @@ DEFAULT_FROM_EMAIL = os.getenv(
     EMAIL_HOST_USER
 )
 
+# Gemini API Configuration
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
+
 # Authentication redirects
 LOGIN_URL = 'accounts:login'
 LOGIN_REDIRECT_URL = 'core:home'
@@ -174,9 +177,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # ---------------------------------------------------------------------------
 # Your User model authenticates with email, not username, so allauth must
 # be told to use email-only auth to match accounts.User (USERNAME_FIELD='email').
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_LOGIN_METHODS = {'email'}
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 
 # Your own accounts app already has an activation-email system, so we don't
