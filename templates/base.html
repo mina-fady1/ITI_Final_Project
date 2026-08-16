@@ -19,7 +19,7 @@
     <style>
         :root {
             --primary-color: #0d9488;
-            --primary-hover: #0f766e;
+            --primary-hoFver: #0f766e;
             --accent-color: #f59e0b;
             --dark-bg: #0f172a;
             --card-bg: #ffffff;
@@ -133,6 +133,12 @@
             border-radius: 50%;
         }
 
+
+        .site-logo {
+            height: 70px;
+            width: auto;
+            object-fit: contain;
+        }
         .star-rating {
             color: var(--accent-color);
         }
@@ -169,9 +175,16 @@
         <div class="container">
 
             <!-- Brand -->
+            {% load static %}
+            
+
             <a class="navbar-brand" href="{% url 'core:home' %}">
-                <i class="fa-solid fa-hand-holding-heart me-2"></i>
-                CrowdFund<span class="text-dark">Egypt</span>
+                    <img src="{% static 'images/logo.jpg' %}"
+                        alt="FundMasr"
+                        class="site-logo">
+            </a>
+            <a class="navbar-brand" href="{% url 'core:home' %}">
+                <span class="text-dark">Fund</span>Masr
             </a>
 
             <!-- Mobile Navbar Button -->
@@ -510,10 +523,7 @@
                 <div class="col-md-5">
 
                     <h5 class="text-white fw-bold">
-
-                        <i class="fa-solid fa-hand-holding-heart text-warning me-2"></i>
-
-                        CrowdFund Egypt
+                        FundMasr
 
                     </h5>
 
