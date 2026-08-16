@@ -112,7 +112,6 @@ class RegistrationForm(forms.ModelForm):
     def save(self, commit=True):
         user = super().save(commit=False)
 
-        # Set password securely
         user.set_password(self.cleaned_data["password"])
 
         # Account starts inactive until email activation link is clicked
@@ -156,7 +155,6 @@ class LoginForm(forms.Form):
 
         if email and password:
 
-            # Check whether the user exists
             user_qs = User.objects.filter(
                 email__iexact=email
             )
@@ -168,17 +166,14 @@ class LoginForm(forms.Form):
 
             user = user_qs.first()
 
-            # Check password
             if not user.check_password(password):
                 raise ValidationError(
                     _("Invalid email or password.")
                 )
 
-            # Check whether the account is active
-            if not user.is_active:
-                raise ValidationError(
-                    _("This account is currently inactive.")
-                )
+            # Do NOT reject inactive users here.
+            # login_view will check is_active and show
+            # the email verification message.
 
             self.user = user
 
