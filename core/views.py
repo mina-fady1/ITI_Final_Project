@@ -1,3 +1,4 @@
+import os
 from django.shortcuts import render, get_object_or_404
 from django.db.models import Q, Avg, Count
 from django.db.models.functions import Coalesce
@@ -97,3 +98,47 @@ def category_detail(request, slug):
         'category': category,
         'page_obj': page_obj,
     })
+
+
+import json
+import time
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from .chatbot_engine import generate_chatbot_reply
+
+@require_POST
+def chatbot_response(request):
+    """
+    Handles AJAX requests from the AI Chatbot frontend.
+    Delegates response generation to the resilient chatbot_engine with live RAG and offline fallbacks.
+    Includes session rate-limiting protection.
+    """
+    try:
+        data = json.loads(request.body)
+        user_message = data.get('message', '').strip()
+        history = data.get('history', [])
+    except (json.JSONDecodeError, AttributeError):
+        return JsonResponse({'error': 'Invalid JSON format'}, status=400)
+
+    if not user_message:
+        return JsonResponse({'error': 'Message cannot be empty'}, status=400)
+
+    if len(user_message) > 1000:
+        return JsonResponse({'error': 'Message exceeds maximum length of 1000 characters'}, status=400)
+
+    # Simple session rate-limiting check
+    last_req = request.session.get('chatbot_last_req_time', 0)
+    now_ts = time.time()
+    if now_ts - last_req < 0.35:
+        return JsonResponse({'error': 'Please wait a moment before sending another message.'}, status=429)
+    request.session['chatbot_last_req_time'] = now_ts
+
+    try:
+        reply_text = generate_chatbot_reply(user_message, history)
+        return JsonResponse({'response': reply_text, 'status': 'success'})
+    except Exception as e:
+        return JsonResponse({
+            'response': "Sorry, an unexpected error occurred while processing your request. Please try again shortly.",
+            'error': str(e)
+        }, status=500)
+

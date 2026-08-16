@@ -7,4 +7,5 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('search/', views.search, name='search'),
     path('category/<slug:slug>/', views.category_detail, name='category_detail'),
+    path('chatbot/', views.chatbot_response, name='chatbot'),
 ]
