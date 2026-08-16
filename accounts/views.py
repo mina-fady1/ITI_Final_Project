@@ -49,10 +49,6 @@ def register(request):
             # Create the user
             user = form.save()
 
-            # User must verify email before login
-            user.is_active = False
-            user.save(update_fields=["is_active"])
-
             # Create activation token
             activation_token = ActivationToken.objects.create(
                 user=user

@@ -10,8 +10,10 @@ A production-ready, full-stack, modular, and responsive Django crowdfunding web 
 * **Email-Based Authentication**: Custom `User` model using `EmailField` as the primary login identifier (`USERNAME_FIELD = 'email'`), removing traditional username constraints.
 * **Registration & Profile Creation**: Captures First Name, Last Name, Email, Egyptian Mobile Phone, Password & Confirmation, and optional Profile Picture.
 * **Egyptian Mobile Phone Validation**: Custom regex validator enforcing valid Egyptian mobile number formats (`010xxxxxxxx`, `011xxxxxxxx`, `012xxxxxxxx`, `015xxxxxxxx`).
-* **Facebook Social Login (`django-allauth`)**: Integrated OAuth2 authentication via Facebook (`accounts.adapters.CustomSocialAccountAdapter`).
-* **Profile Completion Middleware (`accounts.middleware.CompleteProfileMiddleware`)**: Restricts Facebook social login users without a phone number from creating or backing campaigns until they complete their profile with a valid Egyptian phone number.
+* **Email Verification & Activation Flow**:
+  * Upon registration, accounts start inactive (`is_active = False`).
+  * A 24-hour expiring activation link (`ActivationToken`) is emailed to the user.
+  * The user cannot log in until clicking the activation link in their email.
 * **Forgot & Reset Password System**:
   * Request password reset link via registered email.
   * Generates single-use, 1-hour expiring UUID tokens (`PasswordResetToken`).

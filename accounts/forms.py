@@ -114,7 +114,7 @@ class RegistrationForm(forms.ModelForm):
 
         user.set_password(self.cleaned_data["password"])
 
-        # Account must be activated through email verification
+        # Account starts inactive until email activation link is clicked
         user.is_active = False
 
         if commit:

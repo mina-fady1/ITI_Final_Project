@@ -21,8 +21,8 @@ class UserManager(BaseUserManager):
 
         email = self.normalize_email(email)
 
-        # Automatically activate normal users
-        extra_fields.setdefault("is_active", True)
+        # Inactive by default until email activation
+        extra_fields.setdefault("is_active", False)
 
         user = self.model(
             email=email,
